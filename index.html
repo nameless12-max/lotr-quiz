@@ -623,6 +623,68 @@ input[type=text]:focus {
 
 .center-note { text-align: center; color: var(--parchment-dim); font-style: italic; padding: 1.25rem 0; font-size: 15px; }
 
+/* ─── Countdown ─── */
+.countdown-frame {
+  display: flex; align-items: center; justify-content: center;
+  height: 280px;
+}
+.countdown-num {
+  font-family: 'Cinzel', serif;
+  font-size: 130px; font-weight: 800;
+  color: var(--parchment-dim);
+  line-height: 1;
+  animation: countPop 0.65s cubic-bezier(0.22,1,0.36,1);
+  text-shadow: 0 0 60px rgba(201,161,74,0.25);
+}
+.countdown-num.go {
+  font-size: 72px; letter-spacing: 0.2em;
+  color: var(--gold-bright);
+  text-shadow: 0 0 40px rgba(240,212,137,0.7), 0 0 80px rgba(240,212,137,0.3);
+}
+@keyframes countPop {
+  0%   { transform: scale(1.6); opacity: 0; }
+  50%  { opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─── Timer bar (top of question card) ─── */
+.timer-bar-wrap {
+  height: 3px;
+  background: rgba(255,255,255,0.05);
+  margin: -1.75rem -1.5rem 1.4rem;
+  overflow: hidden;
+}
+.timer-bar { height: 100%; transition: width 0.1s linear, background-color 1s; }
+
+/* elapsed seconds label */
+.timer-label {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.3em;
+  text-align: right; margin-bottom: 12px; margin-top: -10px;
+  transition: color 1s;
+}
+
+/* ─── Per-question score flash ─── */
+.q-pts {
+  text-align: center; font-family: 'Cinzel', serif;
+  font-size: 28px; font-weight: 700; letter-spacing: 0.08em;
+  margin-top: 16px; animation: ptsPop 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+.q-pts.earned { color: var(--gold-bright); text-shadow: 0 0 24px rgba(240,212,137,0.5); }
+.q-pts.zero   { color: var(--crimson-glow); }
+@keyframes ptsPop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+/* ─── Speed comparison on done screen ─── */
+.speed-line {
+  font-family: 'IM Fell English', serif; font-style: italic;
+  font-size: 15px; color: var(--gold);
+  text-align: center; margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid rgba(138,109,43,0.35);
+  line-height: 1.5;
+}
+
 /* ─── Two-player name picker ─── */
 .player-select { display: flex; gap: 14px; margin-top: 4px; }
 .player-btn {
@@ -1055,14 +1117,14 @@ const PRAISES = [
   "Not bad for a Halfling.",
 ];
 
-const SCORE_MSGS = [
-  "Zero. Even the Mouth of Sauron pities you. Go re-watch the extended editions.",
-  "One out of five. Bilbo's cousin's gardener could do better, drunk.",
-  "Two. You've seen a movie once, haven't you? At a friend's house. While on your phone.",
-  "Three. Respectable. You'd survive at least the Council, possibly not the Mines.",
-  "Four. A worthy Ranger. Aragorn would buy you a pint at the Prancing Pony.",
-  "Five. Flawless. Suspicious, even. Did you cheat? You cheated, didn't you.",
-];
+function getScoreMsg(score) {
+  if (score >= 48) return "Flawless and instant. Suspicious. You cheated, didn't you.";
+  if (score >= 38) return "Sharp as Andúril. A Ranger of the North at full speed.";
+  if (score >= 26) return "Respectable. You'd survive the Council, possibly the Mines.";
+  if (score >= 14) return "You've seen the movies. Once. At a friend's house. While on your phone.";
+  if (score >=  5) return "Bilbo's cousin's gardener could do better. Drunk.";
+  return "Zero. Even the Mouth of Sauron pities you. Go re-watch the extended editions.";
+}
 const MEDALS = ["✦","✧","✧"];
 const LABELS = ["A","B","C","D"];
 const ROMAN = ["I","II","III","IV","V"];
@@ -1133,10 +1195,15 @@ const PLAYER_KEY = "lotrquiz_player"; // persists forever in this browser
 let state = {
   screen: "name",
   playerName: "",
-  waitingFor: "",      // name of the player blocking today's unlock
+  waitingFor: "",
   questions: getDailyQuestions(),
   qIdx: 0, answers: [], finalAnswers: [],
+  questionScores: [],          // per-question pts (0-10 each), total = myScore
   selected: null, feedback: false,
+  countdown: null,             // 3 | 2 | 1 | 'GO' | null (null = question active)
+  timeStart: null,             // Date.now() when current question went live
+  elapsed: 0,                  // seconds since question started (updated every 100ms)
+  timerInterval: null,         // setInterval id for the tick
   myScore: null, leaderboard: null,
   syncing: false, err: "", copied: false
 };
@@ -1282,7 +1349,12 @@ async function handleStart(name) {
       const prevHasAny = Object.keys(prev).length > 0;
       const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
       if (prevComplete) {
-        setState({ screen: "quiz" });
+        // reset quiz fields then kick the countdown
+      Object.assign(state, { screen: 'quiz', questions: getDailyQuestions(),
+        answers: [], finalAnswers: [], questionScores: [],
+        selected: null, feedback: false, elapsed: 0,
+        countdown: null, timeStart: null, timerInterval: null });
+      kickCountdown(0);
       } else {
         // Find who hasn't played yet
         const missing = PLAYERS.find(p => prev[p] === undefined);
@@ -1294,35 +1366,87 @@ async function handleStart(name) {
   }
 }
 
-function handleAnswer(idx) {
-  if (state.feedback) return;
-  const correct = idx === state.questions[state.qIdx].a;
-  const newAnswers = [...state.answers, correct];
-  setState({ selected: idx, feedback: true, answers: newAnswers });
-  setTimeout(async () => {
-    if (state.qIdx < 4) {
-      setState({ qIdx: state.qIdx+1, selected: null, feedback: false });
+// ── Timer helpers ──────────────────────────────────────────────────────────
+
+function clearQuestionTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+function startQuestionTimer() {
+  state.timeStart = Date.now();
+  state.elapsed = 0;
+  const iv = setInterval(() => {
+    if (state.screen !== 'quiz' || state.countdown !== null || state.feedback) return;
+    const el = (Date.now() - state.timeStart) / 1000;
+    if (el >= 10) {
+      clearInterval(iv); state.timerInterval = null;
+      handleTimeout();
     } else {
-      const score = newAnswers.filter(Boolean).length;
-      setState({ myScore: score, finalAnswers: newAnswers, screen: "done", syncing: true });
-      try {
-        const updated = await saveScore(state.playerName, score);
-        const dk = getDateKey();
-        const today = updated.scores?.[dk] || {};
-        const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
-        setState({ leaderboard: lb, syncing: false });
-      } catch(e) {
-        setState({ syncing: false, err: "Score recorded, but the chronicle failed to sync." });
-      }
+      setState({ elapsed: el });
     }
-  }, 2200);
+  }, 100);
+  state.timerInterval = iv;
+}
+
+// 3-2-1-GO then start question timer
+function kickCountdown(nextIdx) {
+  clearQuestionTimer();
+  setState({ countdown: 3, qIdx: nextIdx, selected: null, feedback: false, elapsed: 0 });
+  const guard = () => state.screen === 'quiz';
+  setTimeout(() => { if (guard()) setState({ countdown: 2 }); },  750);
+  setTimeout(() => { if (guard()) setState({ countdown: 1 }); }, 1500);
+  setTimeout(() => { if (guard()) setState({ countdown: 'GO' }); }, 2250);
+  setTimeout(() => {
+    if (!guard()) return;
+    setState({ countdown: null });
+    startQuestionTimer();
+  }, 2900);
+}
+
+async function finishQuiz(answers, qScores) {
+  const score = qScores.reduce((a, b) => a + b, 0);
+  setState({ myScore: score, finalAnswers: answers, screen: 'done', syncing: true });
+  try {
+    const updated = await saveScore(state.playerName, score);
+    const dk = getDateKey();
+    const today = updated.scores?.[dk] || {};
+    const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
+    setState({ leaderboard: lb, syncing: false });
+  } catch(e) {
+    setState({ syncing: false, err: "Score recorded, but the chronicle failed to sync." });
+  }
+}
+
+function recordAndAdvance(selectedIdx, correct, elapsed) {
+  clearQuestionTimer();
+  // pts: correct → 10 minus floor(seconds), minimum 1; wrong/timeout → 0
+  const qScore = correct ? Math.max(1, 10 - Math.floor(elapsed)) : 0;
+  const newAnswers   = [...state.answers, correct];
+  const newQScores   = [...state.questionScores, qScore];
+  setState({ selected: selectedIdx, feedback: true, answers: newAnswers, questionScores: newQScores, elapsed: Math.min(elapsed, 10) });
+  setTimeout(() => {
+    if (state.qIdx < 4) kickCountdown(state.qIdx + 1);
+    else finishQuiz(newAnswers, newQScores);
+  }, 1800);
+}
+
+function handleAnswer(idx) {
+  if (state.feedback || state.countdown !== null) return;
+  const elapsed = state.timeStart ? (Date.now() - state.timeStart) / 1000 : 10;
+  const correct  = idx === state.questions[state.qIdx].a;
+  recordAndAdvance(idx, correct, elapsed);
+}
+
+function handleTimeout() {
+  if (state.feedback) return;
+  recordAndAdvance(-1, false, 10); // -1 = no selection (timeout)
 }
 
 async function copyResult() {
   const d = new Date();
   const ds = d.toLocaleDateString("en-GB", { day:"numeric", month:"short" });
   const emojis = state.finalAnswers.map(c => c?"⚔":"☠").join(" ");
-  const text = `❖ The Daily Quest · ${ds}\n${state.playerName}: ${state.myScore}/5\n${emojis}`;
+  const text = `❖ The Daily Quest · ${ds}\n${state.playerName}: ${state.myScore}/50\n${emojis}`;
   try {
     await navigator.clipboard.writeText(text);
     setState({ copied: true });
@@ -1395,35 +1519,64 @@ function render() {
   }
 
   if (s.screen === "quiz") {
-    const q = s.questions[s.qIdx];
     const tiles = [0,1,2,3,4].map(i => {
       let cls = "rune-tile";
       if (i < s.qIdx) cls += " active";
       else if (i === s.qIdx) cls += " active current";
       return `<div class="${cls}">${ROMAN[i]}</div>`;
     }).join("");
-    const opts = q.opts.map((opt,i)=>{
+
+    // ── Countdown overlay ──────────────────────────────────────────────────
+    if (s.countdown !== null) {
+      app.innerHTML = `
+        ${miniLandscape()}
+        <div class="prog">${tiles}</div>
+        <div class="countdown-frame">
+          <div class="countdown-num ${s.countdown === 'GO' ? 'go' : ''}">${s.countdown}</div>
+        </div>`;
+      return;
+    }
+
+    // ── Active question ────────────────────────────────────────────────────
+    const q = s.questions[s.qIdx];
+    const pct  = Math.max(0, (1 - s.elapsed / 10) * 100);
+    const tClr = s.elapsed < 5 ? 'var(--gold)' : s.elapsed < 8 ? 'var(--ember)' : 'var(--crimson-glow)';
+
+    const opts = q.opts.map((opt,i) => {
       let cls = "opt";
       if (s.feedback) {
-        if (i===q.a) cls+=" correct";
-        else if (i===s.selected) cls+=" wrong";
-        else cls+=" dim";
+        if (i === q.a) cls += " correct";
+        else if (i === s.selected && s.selected !== -1) cls += " wrong";
+        else cls += " dim";
       }
-      return `<button class="${cls}" data-i="${i}" ${s.feedback?"disabled":""}>
+      return `<button class="${cls}" data-i="${i}" ${s.feedback ? "disabled" : ""}>
         <span class="badge">${LABELS[i]}</span><span>${escHtml(opt)}</span>
       </button>`;
     }).join("");
-    const wasCorrect = s.feedback && s.selected === q.a;
-    const snarkLine = s.feedback
-      ? (wasCorrect
-          ? `<p class="snark good">${escHtml(q.praise)}</p>`
-          : `<p class="snark bad">${escHtml(q.taunt)}</p>`)
+
+    const wasCorrect   = s.feedback && s.selected === q.a;
+    const lastQScore   = s.questionScores[s.questionScores.length - 1];
+    const snarkLine    = s.feedback
+      ? (s.selected === -1
+          ? `<p class="snark bad">⌛ Time's up. The shadow claims another second.</p>`
+          : wasCorrect
+            ? `<p class="snark good">${escHtml(q.praise)}</p>`
+            : `<p class="snark bad">${escHtml(q.taunt)}</p>`)
       : "";
+    const ptsFlash = s.feedback
+      ? `<div class="q-pts ${lastQScore > 0 ? 'earned' : 'zero'}">
+           ${lastQScore > 0 ? '+' + lastQScore + ' pt' + (lastQScore === 1 ? '' : 's') : '+0 pts'}
+         </div>`
+      : "";
+    const runningPts = s.questionScores.reduce((a,b) => a+b, 0);
+
     app.innerHTML = `
       ${miniLandscape()}
       <div class="prog">${tiles}</div>
       <div class="card">
         ${corners()}
+        <div class="timer-bar-wrap"><div class="timer-bar" style="width:${pct}%;background-color:${tClr}"></div></div>
+        <div class="timer-label" style="color:${tClr}">${s.feedback ? (s.selected === -1 ? 'TIME\'S UP' : s.elapsed.toFixed(1) + 's') : s.elapsed.toFixed(1) + 's'}</div>
         <div class="q-tag">
           <span>Trial ${ROMAN[s.qIdx]} of V</span>
           ${peaksRow(q.diff)}
@@ -1431,14 +1584,15 @@ function render() {
         <div class="q-text">${escHtml(q.q)}</div>
       </div>
       <div class="opts">${opts}</div>
+      ${ptsFlash}
       ${snarkLine}
-      <p class="tally"><span class="tally-sword">⚔</span><span class="tally-num">${s.answers.filter(Boolean).length}</span> &nbsp;Victories Thus Far</p>`;
-    document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", ()=>handleAnswer(+b.dataset.i)));
+      <p class="tally"><span class="tally-sword">⚔</span><span class="tally-num">${runningPts}</span> &nbsp;pts so far</p>`;
+    document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => handleAnswer(+b.dataset.i)));
     return;
   }
 
   if (s.screen === "done") {
-    const msg = SCORE_MSGS[Math.min(s.myScore??0,5)];
+    const msg = getScoreMsg(s.myScore ?? 0);
     const dateStr = new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
     // photo banner that varies by score outcome
     const sc = s.myScore ?? 0;
@@ -1471,7 +1625,7 @@ function render() {
             <span class="lb-name">${escHtml(name)}</span>
             ${name===s.playerName?`<span class="lb-you">— you</span>`:""}
           </div>
-          <span class="lb-score ${score===5?'perfect':''}">${score} <span style="opacity:0.4">/</span> 5</span>
+          <span class="lb-score ${score===50?'perfect':''}">${score} <span style="opacity:0.4">/</span> 50</span>
         </div>`;
       }).join("");
     }
@@ -1485,12 +1639,22 @@ function render() {
         <div class="score-frame">
           <svg viewBox="0 0 220 220"><use href="#i-scoreframe"/></svg>
           <div class="score-stack">
-            <span class="score-big">${s.myScore}</span><span class="score-denom">/5</span>
-            <span class="score-of">of Five Trials</span>
+            <span class="score-big">${s.myScore}</span><span class="score-denom">/50</span>
+            <span class="score-of">pts · out of 50</span>
           </div>
         </div>
         <div class="score-msg">${escHtml(msg)}</div>
         ${emojiRow}
+        ${(() => {
+          if (!s.leaderboard || s.leaderboard.length < 2) return '';
+          const me    = s.leaderboard.find(e => e.name === s.playerName);
+          const other = s.leaderboard.find(e => e.name !== s.playerName);
+          if (!me || !other) return '';
+          const diff = me.score - other.score;
+          if (diff > 0)  return `<p class="speed-line">⚡ You struck first — ${diff} pts ahead of ${escHtml(other.name)}</p>`;
+          if (diff < 0)  return `<p class="speed-line">⚡ ${escHtml(other.name)} pipped you by ${-diff} pts</p>`;
+          return `<p class="speed-line">⚔️ Dead heat — perfectly matched today</p>`;
+        })()}
         ${s.finalAnswers.length>0?`<button class="copy-btn" id="cb">${s.copied?"✓ Copied to share":"Copy your tale"}</button>`:""}
       </div>
       <div class="card">
