@@ -1382,7 +1382,17 @@ function startQuestionTimer() {
       clearInterval(iv); state.timerInterval = null;
       handleTimeout();
     } else {
-      setState({ elapsed: el });
+      // direct DOM patch — avoids full re-render so click handlers stay alive
+      state.elapsed = el;
+      const bar   = document.querySelector('.timer-bar');
+      const label = document.querySelector('.timer-label');
+      if (bar) {
+        const pct = Math.max(0, (1 - el / 10) * 100);
+        const clr = el < 5 ? 'var(--gold)' : el < 8 ? 'var(--ember)' : 'var(--crimson-glow)';
+        bar.style.width = pct + '%';
+        bar.style.backgroundColor = clr;
+        if (label) { label.textContent = el.toFixed(1) + 's'; label.style.color = clr; }
+      }
     }
   }, 100);
   state.timerInterval = iv;
