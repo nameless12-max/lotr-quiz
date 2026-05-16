@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Daily Quest · A Chronicle of Middle Lore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0a0805;
+  --ink-2: #110c07;
+  --card: #1a140c;
+  --card-edge: #2a2014;
+  --parchment: #ead7ac;
+  --parchment-2: #d8c08a;
+  --parchment-dim: #9b8867;
+  --parchment-faint: #5c5040;
+  --gold: #c9a14a;
+  --gold-deep: #8a6d2b;
+  --gold-bright: #f0d489;
+  --crimson: #a83828;
+  --crimson-glow: #e0604d;
+  --forest: #4a8a48;
+  --forest-glow: #8edc8a;
+  --ember: #f5a851;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { background: var(--ink); }
+body {
+  font-family: 'IM Fell English', 'Iowan Old Style', Georgia, serif;
+  color: var(--parchment);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  background:
+    radial-gradient(ellipse at 50% 15%, rgba(201,161,74,0.10), transparent 55%),
+    radial-gradient(ellipse at 50% 90%, rgba(168,56,40,0.07), transparent 60%),
+    var(--ink);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ─── Atmospheric layers (fixed, behind everything) ─── */
+/* cinematic background photo — Fellowship marching, sits below everything */
+.bg-photo {
+  position: fixed; inset: 0; pointer-events: none; z-index: -1;
+  background-image: url("./images/bg-fellowship.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  /* very dim + slightly blurred so it's atmosphere, not a distraction */
+  opacity: 0.22;
+  filter: blur(2px) saturate(0.7) brightness(0.65);
+}
+/* ink vignette over the photo so the centre is darker and edges fade further */
+.bg-vignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(10,8,5,0.35), rgba(10,8,5,0.85) 70%, rgba(10,8,5,0.97) 100%);
+}
+/* parchment-noise grain */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.79  0 0 0 0 0.63  0 0 0 0 0.29  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.55; mix-blend-mode: screen;
+}
+
+/* far-distant mountain silhouette fixed across bottom of viewport */
+.skyline {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 200vw;
+  max-width: 2400px;
+  height: 280px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+.skyline svg { width: 100%; height: 100%; display: block; }
+
+/* starfield */
+.stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.7; }
+.star { position: absolute; width: 2px; height: 2px; background: var(--parchment-2); border-radius: 50%; box-shadow: 0 0 6px rgba(234,215,172,0.7); }
+.star.s { width: 1px; height: 1px; box-shadow: 0 0 3px rgba(234,215,172,0.5); }
+.star.t { animation: twinkle 4s ease-in-out infinite; }
+@keyframes twinkle { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+/* drifting embers */
+.embers { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.ember {
+  position: absolute;
+  bottom: -10px;
+  width: 3px; height: 3px;
+  background: var(--ember);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245,168,81,0.7), 0 0 16px rgba(245,168,81,0.3);
+  animation: rise linear infinite;
+  opacity: 0;
+}
+@keyframes rise {
+  0%   { transform: translate(0, 0)        scale(0.4); opacity: 0; }
+  8%   { opacity: 0.9; }
+  50%  { transform: translate(15px, -45vh) scale(1);   opacity: 0.7; }
+  85%  { opacity: 0.4; }
+  100% { transform: translate(-10px, -95vh) scale(0.5); opacity: 0; }
+}
+
+.wrap { width: 100%; max-width: 540px; padding: 1.5rem 0 3rem; position: relative; z-index: 2; }
+
+/* ─── Hero landscape (in-flow, top of welcome screen) ─── */
+.hero {
+  position: relative;
+  height: 220px;
+  margin: 0 -8px 12px;
+  overflow: hidden;
+  border-radius: 2px;
+  box-shadow: inset 0 -30px 60px rgba(10,8,5,0.9), inset 0 0 0 1px rgba(138,109,43,0.35);
+}
+.hero svg { width: 100%; height: 100%; display: block; }
+.hero-seal {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px; height: 120px;
+  filter: drop-shadow(0 0 24px rgba(240,212,137,0.5));
+  animation: sealPulse 5s ease-in-out infinite;
+}
+@keyframes sealPulse {
+  0%,100% { filter: drop-shadow(0 0 22px rgba(240,212,137,0.45)); }
+  50%     { filter: drop-shadow(0 0 38px rgba(240,212,137,0.75)); }
+}
+
+/* ─── Titles ─── */
+.title-block { text-align: center; margin-bottom: 22px; }
+h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  text-shadow: 0 0 28px rgba(240,212,137,0.25), 0 2px 0 rgba(0,0,0,0.5);
+}
+.sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--parchment-dim);
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  padding: 0 12px;
+}
+
+/* ─── Ornamental divider ─── */
+.flourish { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 22px auto 24px; max-width: 380px; opacity: 0.95; }
+.flourish-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-deep) 30%, var(--gold) 50%, var(--gold-deep) 70%, transparent); }
+.flourish svg { display: block; flex-shrink: 0; }
+
+/* ─── Cards ─── */
+.card {
+  background:
+    linear-gradient(180deg, rgba(28,22,16,0.88) 0%, rgba(20,15,9,0.95) 100%);
+  border: 1px solid var(--card-edge);
+  border-radius: 3px;
+  padding: 1.75rem 1.5rem;
+  margin-bottom: 14px;
+  position: relative;
+  box-shadow:
+    inset 0 1px 0 rgba(201,161,74,0.10),
+    inset 0 0 40px rgba(0,0,0,0.45),
+    0 12px 40px rgba(0,0,0,0.6);
+  backdrop-filter: blur(2px);
+}
+/* gold L-bracket corners on every card */
+.card::before, .card::after,
+.card .corner-tr, .card .corner-bl {
+  content: ""; position: absolute; width: 16px; height: 16px;
+  border: 1px solid var(--gold-deep);
+  pointer-events: none;
+}
+.card::before { top: 6px; left: 6px; border-right: 0; border-bottom: 0; }
+.card::after  { bottom: 6px; right: 6px; border-left: 0; border-top: 0; }
+.card .corner-tr { top: 6px; right: 6px; border-left: 0; border-bottom: 0; }
+.card .corner-bl { bottom: 6px; left: 6px; border-right: 0; border-top: 0; }
+/* top-centre ornament on cards */
+.card-crown {
+  position: absolute;
+  top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--ink);
+  padding: 0 10px;
+  line-height: 0;
+  color: var(--gold);
+}
+
+/* ─── Inputs ─── */
+label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--parchment-dim);
+  display: block;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  text-align: center;
+}
+input[type=text] {
+  width: 100%;
+  padding: 13px 16px;
+  font-family: 'IM Fell English', serif;
+  font-size: 18px;
+  border: 1px solid #3a2e1a;
+  border-radius: 3px;
+  background: #0c0805;
+  color: var(--parchment);
+  outline: none;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+input[type=text]::placeholder { color: var(--parchment-faint); font-style: italic; }
+input[type=text]:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 22px rgba(201,161,74,0.2);
+}
+
+/* ─── Buttons ─── */
+.btn {
+  width: 100%;
+  padding: 14px 18px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.30em;
+  text-transform: uppercase;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(201,161,74,0.04), rgba(201,161,74,0.10));
+  color: var(--gold-bright);
+  cursor: pointer;
+  margin-top: 18px;
+  transition: all 0.2s;
+  position: relative;
+}
+.btn:hover {
+  background: linear-gradient(180deg, rgba(201,161,74,0.10), rgba(201,161,74,0.20));
+  box-shadow: 0 0 28px rgba(201,161,74,0.25);
+  text-shadow: 0 0 12px rgba(240,212,137,0.5);
+}
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn-ornament { display: inline-block; margin: 0 10px; color: var(--gold); opacity: 0.85; }
+
+.hint { font-style: italic; font-size: 13px; color: var(--parchment-faint); text-align: center; margin-top: 14px; line-height: 1.5; }
+.err { font-size: 13px; color: var(--crimson-glow); margin-top: 12px; font-style: italic; text-align: center; }
+
+/* ─── Hero dropzone overlay ─── */
+.hero { cursor: pointer; }
+.hero-image {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.hero.has-image .hero-image { opacity: 1; }
+.hero.has-image > svg:first-child { opacity: 0.25; }
+.hero.dz-over {
+  box-shadow: inset 0 -30px 60px rgba(10,8,5,0.9), inset 0 0 0 2px var(--gold);
+}
+.hero-hint {
+  position: absolute;
+  bottom: 8px; left: 50%; transform: translateX(-50%);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  color: var(--parchment-faint);
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  z-index: 3;
+  pointer-events: none;
+  background: rgba(10,8,5,0.7);
+  padding: 4px 12px;
+  border: 1px solid rgba(138,109,43,0.3);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.hero:hover .hero-hint { opacity: 1; }
+.hero-clear {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 26px; height: 26px;
+  border: 1px solid var(--gold-deep);
+  background: rgba(10,8,5,0.75);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 3;
+  border-radius: 0;
+  padding: 0;
+}
+.hero.has-image:not(.has-default) .hero-clear { display: flex; }
+.hero-clear:hover { border-color: var(--gold); color: var(--gold-bright); background: rgba(10,8,5,0.95); }
+
+/* ─── Progress (rune tiles) ─── */
+.prog { display: flex; gap: 8px; align-items: center; margin-bottom: 22px; padding: 0 4px; }
+.rune-tile {
+  flex: 1;
+  height: 28px;
+  border: 1px solid #3a2e1a;
+  background: #0c0805;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--parchment-faint);
+  transition: all 0.4s;
+  position: relative;
+}
+.rune-tile.active {
+  background: linear-gradient(180deg, rgba(201,161,74,0.20), rgba(138,109,43,0.10));
+  border-color: var(--gold);
+  color: var(--gold-bright);
+  box-shadow: inset 0 0 14px rgba(201,161,74,0.25), 0 0 10px rgba(201,161,74,0.18);
+  text-shadow: 0 0 8px rgba(240,212,137,0.5);
+}
+.rune-tile.current { animation: tilePulse 1.8s ease-in-out infinite; }
+@keyframes tilePulse {
+  0%,100% { box-shadow: inset 0 0 14px rgba(201,161,74,0.25), 0 0 10px rgba(201,161,74,0.18); }
+  50%     { box-shadow: inset 0 0 22px rgba(201,161,74,0.45), 0 0 22px rgba(201,161,74,0.35); }
+}
+
+/* ─── Question card ─── */
+.q-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid rgba(138,109,43,0.35);
+  padding-bottom: 12px;
+}
+.peaks-row { display: inline-flex; gap: 3px; align-items: flex-end; height: 12px; }
+.peaks-row svg { display: block; }
+.peak-on { color: var(--gold-bright); filter: drop-shadow(0 0 4px rgba(240,212,137,0.5)); }
+.peak-off { color: #2a2014; }
+
+.q-text {
+  font-family: 'IM Fell English', serif;
+  font-size: 22px;
+  line-height: 1.5;
+  color: var(--parchment);
+  letter-spacing: 0.01em;
+}
+/* illuminated drop-cap */
+.q-text::first-letter {
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 56px;
+  float: left;
+  line-height: 0.85;
+  padding: 6px 10px 0 0;
+  color: var(--gold-bright);
+  text-shadow: 0 0 16px rgba(240,212,137,0.4);
+}
+
+/* ─── Options ─── */
+.opts { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.opt {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #3a2e1a;
+  background: linear-gradient(180deg, rgba(28,22,16,0.85), rgba(20,15,9,0.9));
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: all 0.22s;
+  color: var(--parchment);
+  font-family: 'IM Fell English', serif;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  position: relative;
+}
+.opt:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(34,26,16,0.95), rgba(26,20,12,0.95));
+  box-shadow: 0 0 16px rgba(201,161,74,0.18);
+}
+.opt:disabled { cursor: default; }
+.opt.correct {
+  background: linear-gradient(180deg, rgba(74,138,72,0.20), rgba(74,138,72,0.06));
+  border-color: var(--forest);
+  color: var(--forest-glow);
+  box-shadow: 0 0 20px rgba(74,138,72,0.25);
+}
+.opt.wrong {
+  background: linear-gradient(180deg, rgba(168,56,40,0.20), rgba(168,56,40,0.06));
+  border-color: var(--crimson);
+  color: var(--crimson-glow);
+  box-shadow: 0 0 20px rgba(168,56,40,0.25);
+}
+.opt.dim { opacity: 0.32; }
+
+.badge {
+  min-width: 32px; height: 32px;
+  border: 1px solid var(--gold-deep);
+  background: rgba(201,161,74,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold);
+  flex-shrink: 0;
+  letter-spacing: 0;
+}
+.opt.correct .badge { border-color: var(--forest); color: var(--forest-glow); background: rgba(74,138,72,0.12); }
+.opt.wrong .badge   { border-color: var(--crimson); color: var(--crimson-glow); background: rgba(168,56,40,0.12); }
+
+/* ─── Snark ─── */
+.snark {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 15px;
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  padding: 0 8px;
+}
+.snark.good { color: var(--forest-glow); }
+.snark.bad { color: var(--crimson-glow); }
+.snark::before, .snark::after { content: ""; display: inline-block; width: 22px; height: 1px; background: currentColor; opacity: 0.45; vertical-align: middle; margin: 0 12px; }
+
+.tally {
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.30em;
+  color: var(--parchment-dim);
+  text-transform: uppercase;
+  margin-top: 20px;
+}
+.tally-num { color: var(--gold-bright); font-weight: 700; font-size: 13px; }
+.tally-sword { color: var(--gold); margin-right: 4px; }
+
+/* ─── Score reveal ─── */
+.score-frame {
+  position: relative;
+  width: 220px; height: 220px;
+  margin: 12px auto 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.score-frame > svg { position: absolute; inset: 0; }
+.score-stack { position: relative; z-index: 2; text-align: center; }
+.score-big {
+  font-family: 'Cinzel', serif;
+  font-size: 90px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  line-height: 1;
+  text-shadow: 0 0 32px rgba(240,212,137,0.55), 0 0 4px rgba(240,212,137,0.8);
+}
+.score-denom {
+  font-family: 'Cinzel', serif;
+  font-size: 24px;
+  color: var(--gold-deep);
+  letter-spacing: 0.1em;
+}
+.score-of {
+  display: block;
+  font-family: 'IM Fell English SC', 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--parchment-faint);
+  letter-spacing: 0.30em;
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.date-banner {
+  font-family: 'IM Fell English SC', 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--parchment-faint);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.score-msg {
+  font-family: 'IM Fell English', serif;
+  font-size: 16px;
+  color: var(--parchment-2);
+  font-style: italic;
+  margin-top: 16px;
+  line-height: 1.6;
+  text-align: center;
+  padding: 0 12px;
+}
+.score-msg::before { content: "“"; color: var(--gold-deep); margin-right: 2px; font-size: 24px; vertical-align: -6px; font-style: normal; }
+.score-msg::after  { content: "”"; color: var(--gold-deep); margin-left: 2px; font-size: 24px; vertical-align: -6px; font-style: normal; }
+
+.emojis {
+  display: flex; justify-content: center; gap: 8px; margin-top: 22px;
+  padding: 12px;
+  border-top: 1px solid rgba(138,109,43,0.35);
+  border-bottom: 1px solid rgba(138,109,43,0.35);
+}
+.emoji-cell {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #3a2e1a;
+  background: #0c0805;
+}
+.emoji-cell.win  { color: var(--forest-glow);  border-color: var(--forest);  box-shadow: inset 0 0 8px rgba(74,138,72,0.2); }
+.emoji-cell.loss { color: var(--crimson-glow); border-color: var(--crimson); box-shadow: inset 0 0 8px rgba(168,56,40,0.2); }
+.emoji-cell svg { display: block; }
+
+.copy-btn {
+  background: none;
+  border: 1px solid #3a2e1a;
+  border-radius: 3px;
+  padding: 12px 24px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--parchment-dim);
+  cursor: pointer;
+  margin: 22px auto 0;
+  display: block;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.copy-btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+
+/* ─── Leaderboard ─── */
+.lb-title {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.34em;
+  text-align: center;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+.lb-title::before, .lb-title::after {
+  content: ""; display: inline-block;
+  width: 28px; height: 1px;
+  background: var(--gold-deep);
+  vertical-align: middle;
+  margin: 0 14px;
+}
+.lb-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+  font-family: 'IM Fell English', serif;
+  font-size: 17px;
+  transition: background 0.2s;
+}
+.lb-row:not(.me) { border-bottom: 1px solid rgba(138,109,43,0.18); }
+.lb-row.me {
+  background: linear-gradient(90deg, rgba(201,161,74,0.04), rgba(201,161,74,0.15), rgba(201,161,74,0.04));
+  border: 1px solid rgba(201,161,74,0.4);
+  box-shadow: 0 0 18px rgba(201,161,74,0.1);
+}
+.lb-left { display: flex; align-items: center; gap: 14px; }
+.lb-rank {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+  min-width: 32px;
+  text-align: center;
+}
+.lb-rank.medal { font-size: 18px; color: var(--gold-bright); text-shadow: 0 0 8px rgba(240,212,137,0.4); }
+.lb-name { color: var(--parchment); letter-spacing: 0.02em; }
+.lb-you { font-style: italic; color: var(--gold-deep); font-size: 13px; margin-left: 4px; }
+.lb-score {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--parchment);
+  letter-spacing: 0.06em;
+}
+.lb-score.perfect { color: var(--gold-bright); text-shadow: 0 0 14px rgba(240,212,137,0.5); }
+
+/* ─── Footer ─── */
+.footer {
+  text-align: center;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--parchment-faint);
+  margin-top: 24px;
+  line-height: 1.6;
+}
+.footer .small-flourish {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-top: 10px;
+  color: var(--gold-deep);
+}
+.footer .small-flourish::before, .footer .small-flourish::after {
+  content: ""; width: 36px; height: 1px; background: currentColor; opacity: 0.5;
+}
+
+.center-note { text-align: center; color: var(--parchment-dim); font-style: italic; padding: 1.25rem 0; font-size: 15px; }
+
+/* Mini landscape (above quiz/score screens, smaller) */
+.mini-landscape {
+  position: relative;
+  height: 80px;
+  margin: 0 -8px 16px;
+  overflow: hidden;
+  opacity: 0.85;
+  border-radius: 2px;
+  box-shadow: inset 0 -20px 30px rgba(10,8,5,0.95);
+}
+.mini-landscape svg { width: 100%; height: 100%; display: block; }
+
+/* ─── Done-screen photo banner (varies by score tier) ─── */
+.done-banner {
+  position: relative;
+  height: 160px;
+  margin: 0 -1.5rem 1.5rem;   /* flush to card edges horizontally, sits at card top */
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid rgba(138,109,43,0.45);
+  box-shadow:
+    inset 0 -50px 80px rgba(10,8,5,0.95),
+    inset 0 30px 60px rgba(10,8,5,0.6);
+}
+.done-banner::after {
+  /* heavy bottom vignette so the score numerals read clearly below */
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(10,8,5,0.15) 0%, rgba(10,8,5,0.5) 60%, rgba(10,8,5,1) 100%);
+  pointer-events: none;
+}
+.done-banner.tier-high { background-image: url("./images/done-argonath.jpg"); }
+.done-banner.tier-mid  { background-image: url("./images/done-moria.jpg"); }
+.done-banner.tier-low  { background-image: url("./images/done-witchking.jpg"); }
+/* tier-specific tinting / glow at the bottom edge for mood */
+.done-banner.tier-high { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.4), inset 0 -2px 0 rgba(201,161,74,0.4); }
+.done-banner.tier-low  { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.6), inset 0 -2px 0 rgba(168,56,40,0.5); }
+.done-banner-caption {
+  position: absolute; bottom: 8px; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  color: var(--parchment-dim);
+  text-transform: uppercase;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  z-index: 2;
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 26px; letter-spacing: 0.18em; }
+  .q-text { font-size: 20px; }
+  .q-text::first-letter { font-size: 48px; }
+  .hero { height: 180px; }
+  .hero-seal { width: 100px; height: 100px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Background atmospheric layers ─── -->
+<div class="bg-photo" aria-hidden="true"></div>
+<div class="bg-vignette" aria-hidden="true"></div>
+<div class="stars" id="stars" aria-hidden="true"></div>
+<div class="embers" id="embers" aria-hidden="true"></div>
+<div class="skyline" aria-hidden="true">
+  <svg viewBox="0 0 1600 280" preserveAspectRatio="xMidYEnd slice">
+    <defs>
+      <linearGradient id="mistgrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="rgba(20,15,10,0)"/>
+        <stop offset="0.5" stop-color="rgba(20,15,10,0.5)"/>
+        <stop offset="1" stop-color="rgba(10,8,5,1)"/>
+      </linearGradient>
+    </defs>
+    <!-- distant mountains (faintest) -->
+    <path d="M0 220 L80 170 L150 195 L240 145 L330 180 L440 130 L540 165 L660 120 L760 155 L880 115 L1000 150 L1120 110 L1240 145 L1360 105 L1480 140 L1600 115 L1600 280 L0 280 Z"
+          fill="#1a1410" opacity="0.55"/>
+    <!-- middle mountains -->
+    <path d="M0 240 L60 200 L130 220 L220 175 L300 205 L400 165 L500 195 L590 158 L680 188 L800 152 L920 185 L1040 145 L1150 178 L1270 140 L1380 175 L1500 145 L1600 168 L1600 280 L0 280 Z"
+          fill="#100c08" opacity="0.85"/>
+    <!-- foreground mountains (closest, darkest) with a tower silhouette -->
+    <g>
+      <path d="M0 260 L70 235 L160 248 L260 215 L360 240 L480 205 L600 232 L720 195 L820 222 L940 188 L1060 218 L1180 182 L1300 215 L1420 188 L1540 218 L1600 200 L1600 280 L0 280 Z"
+            fill="#080604"/>
+      <!-- tower atop the peak around x=940 (peak at y=188) -->
+      <g fill="#080604" stroke="#080604">
+        <rect x="932" y="160" width="16" height="32"/>
+        <rect x="928" y="156" width="24" height="6"/>
+        <polygon points="932,156 940,142 948,156"/>
+        <rect x="935" y="148" width="2" height="3"/>
+        <rect x="943" y="148" width="2" height="3"/>
+      </g>
+      <!-- glowing window in the tower -->
+      <rect x="938" y="170" width="4" height="6" fill="#f5a851" opacity="0.95">
+        <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+    <!-- mist overlay -->
+    <rect width="1600" height="280" fill="url(#mistgrad)"/>
+  </svg>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<!-- ─── reusable SVG icons (referenced via use) ─── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Hero landscape (full scene) -->
+    <symbol id="i-hero" viewBox="0 0 540 220" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="herosky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1a0d08"/>
+          <stop offset="0.5" stop-color="#15100a"/>
+          <stop offset="1" stop-color="#0a0805"/>
+        </linearGradient>
+        <radialGradient id="moonglow" cx="0.5" cy="0.45" r="0.4">
+          <stop offset="0" stop-color="rgba(240,212,137,0.25)"/>
+          <stop offset="0.5" stop-color="rgba(240,212,137,0.08)"/>
+          <stop offset="1" stop-color="transparent"/>
+        </radialGradient>
+        <linearGradient id="heromist" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(10,8,5,0)"/>
+          <stop offset="1" stop-color="rgba(10,8,5,0.95)"/>
+        </linearGradient>
+      </defs>
+      <rect width="540" height="220" fill="url(#herosky)"/>
+      <rect width="540" height="220" fill="url(#moonglow)"/>
+      <!-- stars -->
+      <g fill="#ead7ac">
+        <circle cx="40"  cy="22" r="0.9"/><circle cx="92"  cy="38" r="0.6"/>
+        <circle cx="135" cy="18" r="0.8"/><circle cx="186" cy="42" r="0.5"/>
+        <circle cx="240" cy="26" r="0.7"/><circle cx="298" cy="50" r="0.6"/>
+        <circle cx="352" cy="20" r="0.9"/><circle cx="408" cy="38" r="0.5"/>
+        <circle cx="455" cy="28" r="0.7"/><circle cx="500" cy="46" r="0.6"/>
+        <circle cx="68"  cy="62" r="0.5"/><circle cx="215" cy="68" r="0.5"/>
+        <circle cx="375" cy="72" r="0.5"/><circle cx="470" cy="64" r="0.5"/>
+      </g>
+      <!-- back mountain range (faintest) -->
+      <path d="M0 150 L48 118 L96 138 L150 100 L210 130 L268 92 L322 122 L380 88 L432 118 L490 95 L540 110 L540 220 L0 220 Z"
+            fill="#1a1410" opacity="0.6"/>
+      <!-- middle range -->
+      <path d="M0 168 L40 145 L92 158 L148 122 L208 152 L262 115 L318 145 L380 108 L432 142 L492 115 L540 135 L540 220 L0 220 Z"
+            fill="#100c08" opacity="0.85"/>
+      <!-- foreground range with tower -->
+      <path d="M0 195 L50 175 L110 188 L172 158 L235 182 L300 150 L370 175 L430 142 L490 168 L540 148 L540 220 L0 220 Z"
+            fill="#070504"/>
+      <!-- tower atop the peak near x=300 -->
+      <g fill="#070504">
+        <rect x="294" y="120" width="12" height="32"/>
+        <rect x="290" y="116" width="20" height="6"/>
+        <polygon points="294,116 300,104 306,116"/>
+      </g>
+      <!-- glowing window -->
+      <rect x="298" y="130" width="4" height="5" fill="#f5a851">
+        <animate attributeName="opacity" values="0.5;1;0.5" dur="2.8s" repeatCount="indefinite"/>
+      </rect>
+      <!-- mist -->
+      <rect width="540" height="220" fill="url(#heromist)"/>
+    </symbol>
+
+    <!-- The heraldic seal: outer ring, runic ticks, three mountain peaks, star above -->
+    <symbol id="i-seal" viewBox="0 0 120 120">
+      <!-- outer thin ring -->
+      <circle cx="60" cy="60" r="56" fill="none" stroke="#c9a14a" stroke-width="0.6"/>
+      <!-- 16 rune ticks -->
+      <g fill="none" stroke="#c9a14a" stroke-width="1.2" stroke-linecap="round">
+        <line x1="60" y1="7"  x2="60" y2="11"/>
+        <line x1="79.5" y1="11.2" x2="78.1" y2="14.9"/>
+        <line x1="96.4" y1="22.4" x2="93.7" y2="25.1"/>
+        <line x1="108.8" y1="40.5" x2="105.1" y2="41.9"/>
+        <line x1="113" y1="60" x2="109" y2="60"/>
+        <line x1="108.8" y1="79.5" x2="105.1" y2="78.1"/>
+        <line x1="96.4" y1="97.6" x2="93.7" y2="94.9"/>
+        <line x1="79.5" y1="108.8" x2="78.1" y2="105.1"/>
+        <line x1="60" y1="113" x2="60" y2="109"/>
+        <line x1="40.5" y1="108.8" x2="41.9" y2="105.1"/>
+        <line x1="23.6" y1="97.6" x2="26.3" y2="94.9"/>
+        <line x1="11.2" y1="79.5" x2="14.9" y2="78.1"/>
+        <line x1="7"  y1="60" x2="11" y2="60"/>
+        <line x1="11.2" y1="40.5" x2="14.9" y2="41.9"/>
+        <line x1="23.6" y1="22.4" x2="26.3" y2="25.1"/>
+        <line x1="40.5" y1="11.2" x2="41.9" y2="14.9"/>
+      </g>
+      <!-- inner thick ring -->
+      <circle cx="60" cy="60" r="47" fill="none" stroke="#c9a14a" stroke-width="1.4"/>
+      <!-- innermost hairline ring -->
+      <circle cx="60" cy="60" r="42" fill="none" stroke="#c9a14a" stroke-width="0.4" opacity="0.7"/>
+      <!-- gold disc behind motif -->
+      <circle cx="60" cy="60" r="40" fill="#0c0805"/>
+      <!-- star above peaks -->
+      <g transform="translate(60,38)" fill="#f0d489">
+        <path d="M0 -10 L2.4 -3.1 L9.5 -3.1 L3.6 1.2 L5.9 8.1 L0 4.0 L-5.9 8.1 L-3.6 1.2 L-9.5 -3.1 L-2.4 -3.1 Z"/>
+      </g>
+      <!-- three mountain peaks -->
+      <g fill="none" stroke="#f0d489" stroke-width="1.6" stroke-linejoin="round">
+        <path d="M30 78 L46 53 L60 73" opacity="0.55"/>
+        <path d="M60 73 L74 53 L90 78" opacity="0.55"/>
+        <path d="M38 82 L60 46 L82 82"/>
+        <line x1="28" y1="82" x2="92" y2="82" stroke-width="1.2"/>
+      </g>
+    </symbol>
+
+    <!-- Small flourish ornament for dividers -->
+    <symbol id="i-flourish" viewBox="0 0 80 14">
+      <g fill="none" stroke="#c9a14a" stroke-width="1" stroke-linecap="round">
+        <!-- center diamond -->
+        <path d="M40 7 L48 2 L56 7 L48 12 Z" fill="#c9a14a" opacity="0.9"/>
+        <circle cx="40" cy="7" r="1.6" fill="#c9a14a" stroke="none"/>
+        <circle cx="56" cy="7" r="1.6" fill="#c9a14a" stroke="none"/>
+        <!-- curls left -->
+        <path d="M30 7 Q22 7 22 3 Q22 0 26 0"/>
+        <path d="M28 7 Q18 7 18 11 Q18 14 22 14"/>
+        <!-- curls right -->
+        <path d="M66 7 Q74 7 74 3 Q74 0 70 0"/>
+        <path d="M68 7 Q78 7 78 11 Q78 14 74 14"/>
+        <circle cx="6" cy="7" r="1.2" fill="#c9a14a" stroke="none" opacity="0.6"/>
+      </g>
+    </symbol>
+
+    <!-- Card-crown ornament (small motif placed at top of cards) -->
+    <symbol id="i-crown" viewBox="0 0 40 14">
+      <g fill="#c9a14a">
+        <circle cx="20" cy="7" r="2.2"/>
+        <circle cx="20" cy="7" r="4" fill="none" stroke="#c9a14a" stroke-width="0.7"/>
+        <path d="M10 7 L4 4 L4 10 Z" opacity="0.9"/>
+        <path d="M30 7 L36 4 L36 10 Z" opacity="0.9"/>
+      </g>
+    </symbol>
+
+    <!-- Mountain peak (difficulty indicator) -->
+    <symbol id="i-peak" viewBox="0 0 14 12">
+      <path d="M1 11 L7 1 L13 11 Z" fill="currentColor" opacity="0.95"/>
+    </symbol>
+
+    <!-- Sword (correct answer mark) -->
+    <symbol id="i-sword" viewBox="0 0 22 22">
+      <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="11" y1="3" x2="11" y2="15"/>
+        <line x1="7" y1="7" x2="15" y2="7"/>
+        <path d="M11 15 L9 18 L11 19 L13 18 Z" fill="currentColor"/>
+      </g>
+    </symbol>
+
+    <!-- Skull (wrong answer mark) -->
+    <symbol id="i-skull" viewBox="0 0 22 22">
+      <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.5 10 a6.5 6.5 0 0 1 13 0 v3.5 a1.5 1.5 0 0 1 -1.5 1.5 H14 v2.5 H8 v-2.5 H6 A1.5 1.5 0 0 1 4.5 13.5 Z"/>
+        <circle cx="8.5" cy="11" r="1.4" fill="currentColor" stroke="none"/>
+        <circle cx="13.5" cy="11" r="1.4" fill="currentColor" stroke="none"/>
+        <path d="M10 14 L11 15.5 L12 14"/>
+      </g>
+    </symbol>
+
+    <!-- Score frame: medallion -->
+    <symbol id="i-scoreframe" viewBox="0 0 220 220">
+      <g fill="none" stroke="#c9a14a">
+        <circle cx="110" cy="110" r="106" stroke-width="0.5" opacity="0.5"/>
+        <circle cx="110" cy="110" r="96" stroke-width="1.4"/>
+        <circle cx="110" cy="110" r="88" stroke-width="0.4" opacity="0.6"/>
+        <g stroke-width="1.4" stroke-linecap="round" opacity="0.9">
+          <line x1="110" y1="6" x2="110" y2="16"/>
+          <line x1="110" y1="204" x2="110" y2="214"/>
+          <line x1="6" y1="110" x2="16" y2="110"/>
+          <line x1="204" y1="110" x2="214" y2="110"/>
+          <line x1="37" y1="37" x2="44" y2="44"/>
+          <line x1="176" y1="176" x2="183" y2="183"/>
+          <line x1="37" y1="183" x2="44" y2="176"/>
+          <line x1="176" y1="44" x2="183" y2="37"/>
+        </g>
+        <g fill="#c9a14a" stroke="none" opacity="0.9">
+          <circle cx="110" cy="24" r="1.8"/>
+          <circle cx="110" cy="196" r="1.8"/>
+          <circle cx="24" cy="110" r="1.8"/>
+          <circle cx="196" cy="110" r="1.8"/>
+        </g>
+        <!-- 4 corner ornaments -->
+        <g stroke-width="0.8" opacity="0.8">
+          <path d="M40 80 Q60 90 80 80"/>
+          <path d="M40 140 Q60 130 80 140"/>
+          <path d="M180 80 Q160 90 140 80"/>
+          <path d="M180 140 Q160 130 140 140"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<script>
+// ────── Generate atmospheric particles ──────
+(function spawnAtmosphere() {
+  const stars = document.getElementById("stars");
+  // deterministic-ish positions for the starfield
+  const starData = [
+    [12,8,1],[28,18,0],[42,5,1],[58,22,0],[71,13,1],[85,7,0],[93,25,1],
+    [8,38,0],[22,42,1],[36,30,0],[52,40,1],[66,33,0],[78,45,1],[88,38,0],
+    [4,55,1],[18,62,0],[32,58,1],[44,72,0],[60,65,1],[74,75,0],[90,68,1],
+  ];
+  starData.forEach(([x,y,sm], i) => {
+    const el = document.createElement("div");
+    el.className = "star" + (sm ? " s" : "") + (i % 3 === 0 ? " t" : "");
+    el.style.left = x + "vw";
+    el.style.top = y + "vh";
+    if (i % 3 === 0) el.style.animationDelay = (i * 0.3) + "s";
+    stars.appendChild(el);
+  });
+  const embers = document.getElementById("embers");
+  for (let i = 0; i < 7; i++) {
+    const e = document.createElement("div");
+    e.className = "ember";
+    e.style.left = (10 + i * 13 + Math.random() * 6) + "vw";
+    e.style.animationDuration = (8 + Math.random() * 6) + "s";
+    e.style.animationDelay = (-Math.random() * 10) + "s";
+    embers.appendChild(e);
+  }
+})();
+</script>
+
+<script>
+const BIN_ID = "6a08b151250b1311c35da367";
+const MASTER_KEY = "$2a$10$xKQ.upMZOGGmWz2D6rfSsOnUoMqVxPsU87W7MjOYtm5vL4r1TYp7e";
+
+const ALL_Q = [
+  { q: "Who carries the One Ring into Mordor to destroy it?", opts: ["Frodo Baggins","Gandalf","Samwise Gamgee","Aragorn"], a: 0, diff: 1 },
+  { q: "Where is the One Ring finally destroyed?", opts: ["Mount Doom","Rivendell","Barad-dûr","The Dead Marshes"], a: 0, diff: 1 },
+  { q: "What is the name of Frodo's home in the Shire?", opts: ["Bag End","Bywater","Buckland","Overhill"], a: 0, diff: 1 },
+  { q: "What does Gollum call the One Ring?", opts: ["My Precious","The One","Master","My Love"], a: 0, diff: 1 },
+  { q: "What race is Gimli?", opts: ["Dwarf","Hobbit","Man","Elf"], a: 0, diff: 1 },
+  { q: "What colour does Gandalf wear after returning from death?", opts: ["White","Silver","Gold","Grey"], a: 0, diff: 1 },
+  { q: "Which Hobbit accompanies Frodo all the way to Mount Doom?", opts: ["Samwise Gamgee","Merry","Pippin","Bilbo"], a: 0, diff: 1 },
+  { q: "What is Frodo's elvish blade called?", opts: ["Sting","Andúril","Orcrist","Glamdring"], a: 0, diff: 1 },
+
+  { q: "What elvish word is the password to the Mines of Moria?", opts: ["Mellon","Calad","Ithil","Elendil"], a: 0, diff: 2 },
+  { q: "Who delivers the killing blow to the Witch-king of Angmar?", opts: ["Éowyn","Merry","Aragorn","Gandalf"], a: 0, diff: 2 },
+  { q: "Who is the Lady of Lothlórien?", opts: ["Galadriel","Arwen","Éowyn","Goldberry"], a: 0, diff: 2 },
+  { q: "What is the name of Gandalf's horse?", opts: ["Shadowfax","Bill","Arod","Hasufel"], a: 0, diff: 2 },
+  { q: "Who attempts to seize the Ring and breaks the Fellowship?", opts: ["Boromir","Gimli","Faramir","Denethor"], a: 0, diff: 2 },
+  { q: "Which wizard is corrupted and serves Sauron?", opts: ["Saruman","Gandalf","Radagast","Pallando"], a: 0, diff: 2 },
+  { q: "What is the name of Aragorn's reforged sword?", opts: ["Andúril","Sting","Glamdring","Orcrist"], a: 0, diff: 2 },
+  { q: "What is the name of the Hobbit village where Frodo grows up?", opts: ["Hobbiton","Bree","Michel Delving","Tuckborough"], a: 0, diff: 2 },
+
+  { q: "What type of creature is Treebeard?", opts: ["An Ent","A troll","A giant","A Huorn"], a: 0, diff: 3 },
+  { q: "Who forged the One Ring?", opts: ["Sauron","Morgoth","Saruman","Celebrimbor"], a: 0, diff: 3 },
+  { q: "At which inn does Frodo first meet Aragorn?", opts: ["The Prancing Pony","The Green Dragon","The Golden Perch","The Ivy Bush"], a: 0, diff: 3 },
+  { q: "What creature is Shelob?", opts: ["A giant spider","A cave troll","A giant bat","A warg"], a: 0, diff: 3 },
+  { q: "What are Sauron's nine undead servants called?", opts: ["Nazgûl","Balrogs","Uruk-hai","Barrow-wights"], a: 0, diff: 3 },
+  { q: "In which ancient forest do the Ents live?", opts: ["Fangorn","Mirkwood","The Old Forest","Lothlórien"], a: 0, diff: 3 },
+  { q: "What Elvish tree-realm does the Fellowship rest in?", opts: ["Lothlórien","Rivendell","Mirkwood","Lindon"], a: 0, diff: 3 },
+  { q: "Who does Aragorn marry?", opts: ["Arwen","Éowyn","Galadriel","Goldberry"], a: 0, diff: 3 },
+
+  { q: "Who is the lord of Rivendell?", opts: ["Elrond","Círdan","Celeborn","Thranduil"], a: 0, diff: 4 },
+  { q: "Where does the Council take place to decide the fate of the Ring?", opts: ["Rivendell","Lothlórien","Minas Tirith","Edoras"], a: 0, diff: 4 },
+  { q: "What is Sauron's great dark fortress called?", opts: ["Barad-dûr","Minas Morgul","Orthanc","Dol Guldur"], a: 0, diff: 4 },
+  { q: "Who guards the Bridge of Khazad-dûm against the Fellowship?", opts: ["Durin's Bane — a Balrog","A cave troll","An ancient dragon","A Ringwraith"], a: 0, diff: 4 },
+  { q: "Who ultimately leads the Fellowship of the Ring?", opts: ["Gandalf","Aragorn","Boromir","Frodo"], a: 0, diff: 4 },
+  { q: "How many rings of power were given to mortal Men?", opts: ["Nine","Three","Seven","Twelve"], a: 0, diff: 4 },
+  { q: "How many rings of power were given to the Dwarf lords?", opts: ["Seven","Three","Nine","Twelve"], a: 0, diff: 4 },
+  { q: "What is Sam's wife's name?", opts: ["Rosie Cotton","Pearl Took","Lobelia","Ruby"], a: 0, diff: 4 },
+
+  { q: "Who is Legolas's father?", opts: ["Thranduil","Elrond","Celeborn","Círdan"], a: 0, diff: 5 },
+  { q: "How old is Bilbo at his famous farewell birthday party?", opts: ["111","100","120","108"], a: 0, diff: 5 },
+  { q: "What is the name of Saruman's tower?", opts: ["Orthanc","Barad-dûr","Dol Guldur","Minas Morgul"], a: 0, diff: 5 },
+  { q: "Who is the Steward of Gondor during the War of the Ring?", opts: ["Denethor","Boromir","Faramir","Húrin"], a: 0, diff: 5 },
+  { q: "What is a Palantír?", opts: ["A seeing stone","An elvish sword","A ring of power","A map of Middle-earth"], a: 0, diff: 5 },
+  { q: "Who is King of Rohan during the War of the Ring?", opts: ["Théoden","Éomer","Théodred","Grima Wormtongue"], a: 0, diff: 5 },
+  { q: "What is Bilbo's famous written memoir called?", opts: ["There and Back Again","The Red Book of Westmarch","A Long-Expected Party","Adventures Underground"], a: 0, diff: 5 },
+  { q: "Where do the Elves sail at the end of the Third Age?", opts: ["Valinor — the Undying Lands","Númenor","Lindon","The Grey Havens (staying)"], a: 0, diff: 5 },
+];
+
+const TAUNTS = [
+  "A child of the Shire would have known that.",
+  "Even an Orc could've guessed better.",
+  "Saruman is laughing somewhere.",
+  "Did you skip the movies AND the books?",
+  "Gollum knows more than you, precious.",
+  "The Witch-king is unimpressed.",
+  "Boromir died for this and you can't even answer it.",
+  "A Hobbit lass half your age would scoff.",
+  "Sauron just smiled. That's bad.",
+  "Treebeard would say this is too hasty… and wrong.",
+  "Even Pippin wouldn't have fumbled that one.",
+  "Mordor called. They want their dignity back.",
+];
+
+const PRAISES = [
+  "Well struck, traveller.",
+  "Elrond nods in approval.",
+  "Galadriel saw this coming.",
+  "Gandalf would be proud.",
+  "A true student of the Red Book.",
+  "Not bad for a Halfling.",
+];
+
+const SCORE_MSGS = [
+  "Zero. Even the Mouth of Sauron pities you. Go re-watch the extended editions.",
+  "One out of five. Bilbo's cousin's gardener could do better, drunk.",
+  "Two. You've seen a movie once, haven't you? At a friend's house. While on your phone.",
+  "Three. Respectable. You'd survive at least the Council, possibly not the Mines.",
+  "Four. A worthy Ranger. Aragorn would buy you a pint at the Prancing Pony.",
+  "Five. Flawless. Suspicious, even. Did you cheat? You cheated, didn't you.",
+];
+const MEDALS = ["✦","✧","✧"];
+const LABELS = ["A","B","C","D"];
+const ROMAN = ["I","II","III","IV","V"];
+
+const IST_OFFSET_MIN = 330;
+const ROLLOVER_HOUR = 19;
+
+function getDateKey() {
+  const nowUtcMs = Date.now();
+  const shifted = new Date(nowUtcMs + IST_OFFSET_MIN*60*1000 - ROLLOVER_HOUR*3600*1000);
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth()+1).padStart(2,"0")}-${String(shifted.getUTCDate()).padStart(2,"0")}`;
+}
+
+function getDailyQuestions() {
+  const dk = getDateKey();
+  let seed = 0;
+  for (let i = 0; i < dk.length; i++) seed = (seed * 31 + dk.charCodeAt(i)) >>> 0;
+  let s = seed;
+  const rng = () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 0x100000000; };
+
+  const picks = [];
+  for (let tier = 1; tier <= 5; tier++) {
+    const bucket = ALL_Q.filter(q => q.diff === tier).map(q => ({ ...q, opts: [...q.opts] }));
+    for (let i = bucket.length - 1; i > 0; i--) { const j = Math.floor(rng()*(i+1)); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
+    const chosen = bucket[0];
+    const correct = chosen.opts[chosen.a];
+    const opts = [...chosen.opts];
+    for (let i = opts.length-1; i > 0; i--) { const j = Math.floor(rng()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
+    const taunt = TAUNTS[Math.floor(rng() * TAUNTS.length)];
+    const praise = PRAISES[Math.floor(rng() * PRAISES.length)];
+    picks.push({ q: chosen.q, opts, a: opts.indexOf(correct), diff: tier, taunt, praise });
+  }
+  return picks;
+}
+
+async function readBin() {
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { headers: { "X-Master-Key": MASTER_KEY } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()).record;
+}
+
+async function saveScore(name, score) {
+  const record = await readBin();
+  const dk = getDateKey();
+  if (!record.scores) record.scores = {};
+  if (!record.scores[dk]) record.scores[dk] = {};
+  record.scores[dk][name] = score;
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
+    body: JSON.stringify(record)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return record;
+}
+
+let state = {
+  screen: "name",
+  nameInput: "", playerName: "",
+  questions: getDailyQuestions(),
+  qIdx: 0, answers: [], finalAnswers: [],
+  selected: null, feedback: false,
+  myScore: null, leaderboard: null,
+  syncing: false, err: "", copied: false
+};
+
+function setState(patch) { Object.assign(state, patch); render(); }
+
+function escHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function flourish() {
+  return `<div class="flourish">
+    <span class="flourish-line"></span>
+    <svg width="80" height="14" aria-hidden="true"><use href="#i-flourish"/></svg>
+    <span class="flourish-line"></span>
+  </div>`;
+}
+
+function corners() {
+  return `<span class="corner-tr"></span><span class="corner-bl"></span>
+          <span class="card-crown"><svg width="40" height="14"><use href="#i-crown"/></svg></span>`;
+}
+
+function heroBlock() {
+  return `<div class="hero" id="hero-dz">
+    <svg viewBox="0 0 540 220" preserveAspectRatio="xMidYMid slice"><use href="#i-hero"/></svg>
+    <div class="hero-image" id="hero-img"></div>
+    <svg class="hero-seal" viewBox="0 0 120 120" aria-label="Seal of the Quest"><use href="#i-seal"/></svg>
+    <span class="hero-hint">Click or drop an image · your own banner</span>
+    <button class="hero-clear" id="hero-clear" title="Remove banner">✕</button>
+  </div>`;
+}
+
+// ─── Hero image dropzone (localStorage-backed, persists in any browser) ───
+// Default fallback: the One Ring photo. User can drop their own to override.
+const HERO_KEY = "lotrquiz_hero_image";
+const HERO_DEFAULT = "./images/hero-ring.jpg";
+function applyStoredHero(dz, img) {
+  const stored = localStorage.getItem(HERO_KEY);
+  if (stored) {
+    img.style.backgroundImage = `url(${stored})`;
+    dz.classList.add("has-image");
+    dz.classList.remove("has-default");
+  } else {
+    img.style.backgroundImage = `url(${HERO_DEFAULT})`;
+    dz.classList.add("has-image", "has-default");
+  }
+}
+function downscaleAndStore(file, dz, img) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const tmp = new Image();
+    tmp.onload = () => {
+      const MAX = 1400;
+      let w = tmp.width, h = tmp.height;
+      if (w > MAX || h > MAX) {
+        const r = Math.min(MAX / w, MAX / h);
+        w = Math.round(w * r); h = Math.round(h * r);
+      }
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(tmp, 0, 0, w, h);
+      const dataUrl = c.toDataURL("image/jpeg", 0.82);
+      try {
+        localStorage.setItem(HERO_KEY, dataUrl);
+        applyStoredHero(dz, img);
+      } catch(err) {
+        alert("Image too large to store. Try a smaller image.");
+      }
+    };
+    tmp.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function wireHero() {
+  const dz = document.getElementById("hero-dz");
+  const img = document.getElementById("hero-img");
+  if (!dz || !img) return;
+  applyStoredHero(dz, img);
+  dz.addEventListener("click", e => {
+    if (e.target.id === "hero-clear") return;
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "image/*";
+    inp.onchange = ev => downscaleAndStore(ev.target.files[0], dz, img);
+    inp.click();
+  });
+  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("dz-over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("dz-over"));
+  dz.addEventListener("drop", e => {
+    e.preventDefault();
+    dz.classList.remove("dz-over");
+    downscaleAndStore(e.dataTransfer.files[0], dz, img);
+  });
+  const clr = document.getElementById("hero-clear");
+  if (clr) clr.addEventListener("click", e => {
+    e.stopPropagation();
+    localStorage.removeItem(HERO_KEY);
+    applyStoredHero(dz, img);
+  });
+}
+
+function miniLandscape() {
+  return `<div class="mini-landscape"><svg viewBox="0 0 540 80" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="mlmist" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="rgba(10,8,5,0)"/>
+        <stop offset="1" stop-color="rgba(10,8,5,1)"/>
+      </linearGradient>
+    </defs>
+    <path d="M0 60 L60 35 L120 50 L190 22 L250 45 L320 18 L390 42 L450 20 L510 38 L540 30 L540 80 L0 80 Z" fill="#100c08"/>
+    <path d="M0 70 L80 50 L160 62 L230 38 L310 58 L390 32 L460 55 L540 42 L540 80 L0 80 Z" fill="#070504"/>
+    <rect width="540" height="80" fill="url(#mlmist)"/>
+  </svg></div>`;
+}
+
+function peaksRow(level) {
+  let html = `<span class="peaks-row" aria-label="Difficulty ${level} of 5">`;
+  for (let i = 1; i <= 5; i++) {
+    html += `<svg width="11" height="11" class="${i<=level?'peak-on':'peak-off'}"><use href="#i-peak"/></svg>`;
+  }
+  return html + `</span>`;
+}
+
+async function handleStart() {
+  const n = state.nameInput.trim();
+  if (!n) return;
+  setState({ playerName: n, screen: "checking", err: "" });
+  try {
+    const record = await readBin();
+    const dk = getDateKey();
+    const today = record.scores?.[dk] || {};
+    if (today[n] !== undefined) {
+      const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
+      setState({ myScore: today[n], leaderboard: lb, screen: "done" });
+    } else {
+      setState({ screen: "quiz" });
+    }
+  } catch(e) {
+    setState({ err: "The palantír is clouded — check your connection.", screen: "name" });
+  }
+}
+
+function handleAnswer(idx) {
+  if (state.feedback) return;
+  const correct = idx === state.questions[state.qIdx].a;
+  const newAnswers = [...state.answers, correct];
+  setState({ selected: idx, feedback: true, answers: newAnswers });
+  setTimeout(async () => {
+    if (state.qIdx < 4) {
+      setState({ qIdx: state.qIdx+1, selected: null, feedback: false });
+    } else {
+      const score = newAnswers.filter(Boolean).length;
+      setState({ myScore: score, finalAnswers: newAnswers, screen: "done", syncing: true });
+      try {
+        const updated = await saveScore(state.playerName, score);
+        const dk = getDateKey();
+        const today = updated.scores?.[dk] || {};
+        const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
+        setState({ leaderboard: lb, syncing: false });
+      } catch(e) {
+        setState({ syncing: false, err: "Score recorded, but the chronicle failed to sync." });
+      }
+    }
+  }, 2200);
+}
+
+async function copyResult() {
+  const d = new Date();
+  const ds = d.toLocaleDateString("en-GB", { day:"numeric", month:"short" });
+  const emojis = state.finalAnswers.map(c => c?"⚔":"☠").join(" ");
+  const text = `❖ The Daily Quest · ${ds}\n${state.playerName}: ${state.myScore}/5\n${emojis}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    setState({ copied: true });
+    setTimeout(() => setState({ copied: false }), 2500);
+  } catch(e) {}
+}
+
+function render() {
+  const app = document.getElementById("app");
+  const s = state;
+
+  if (s.screen === "name" || s.screen === "checking") {
+    app.innerHTML = `
+      ${heroBlock()}
+      <div class="title-block">
+        <h1>The Daily Quest</h1>
+        <p class="sub">Five questions of Middle-earth · ascending in peril<br/>a new quest rises at dusk (7 PM IST)</p>
+      </div>
+      ${flourish()}
+      <div class="card">
+        ${corners()}
+        ${s.screen === "checking"
+          ? `<p class="center-note">Consulting the palantír…</p>`
+          : `<label>What is your name, traveller?</label>
+             <input type="text" id="ni" placeholder="e.g. Frodo of the Shire" value="${escHtml(s.nameInput)}" autocomplete="off" />
+             ${s.err ? `<p class="err">${escHtml(s.err)}</p>` : ""}
+             <button class="btn" id="sb"><span class="btn-ornament">❖</span>Begin the Quest<span class="btn-ornament">❖</span></button>
+             <p class="hint">Already journeyed today? Enter the same name to see the roll.</p>`
+        }
+      </div>
+      `;
+    if (s.screen === "name") {
+      const inp = document.getElementById("ni");
+      inp.addEventListener("input", e => { state.nameInput = e.target.value; });
+      inp.addEventListener("keydown", e => { if (e.key === "Enter") handleStart(); });
+      inp.focus();
+      document.getElementById("sb").addEventListener("click", handleStart);
+    }
+    wireHero();
+    return;
+  }
+
+  if (s.screen === "quiz") {
+    const q = s.questions[s.qIdx];
+    const tiles = [0,1,2,3,4].map(i => {
+      let cls = "rune-tile";
+      if (i < s.qIdx) cls += " active";
+      else if (i === s.qIdx) cls += " active current";
+      return `<div class="${cls}">${ROMAN[i]}</div>`;
+    }).join("");
+    const opts = q.opts.map((opt,i)=>{
+      let cls = "opt";
+      if (s.feedback) {
+        if (i===q.a) cls+=" correct";
+        else if (i===s.selected) cls+=" wrong";
+        else cls+=" dim";
+      }
+      return `<button class="${cls}" data-i="${i}" ${s.feedback?"disabled":""}>
+        <span class="badge">${LABELS[i]}</span><span>${escHtml(opt)}</span>
+      </button>`;
+    }).join("");
+    const wasCorrect = s.feedback && s.selected === q.a;
+    const snarkLine = s.feedback
+      ? (wasCorrect
+          ? `<p class="snark good">${escHtml(q.praise)}</p>`
+          : `<p class="snark bad">${escHtml(q.taunt)}</p>`)
+      : "";
+    app.innerHTML = `
+      ${miniLandscape()}
+      <div class="prog">${tiles}</div>
+      <div class="card">
+        ${corners()}
+        <div class="q-tag">
+          <span>Trial ${ROMAN[s.qIdx]} of V</span>
+          ${peaksRow(q.diff)}
+        </div>
+        <div class="q-text">${escHtml(q.q)}</div>
+      </div>
+      <div class="opts">${opts}</div>
+      ${snarkLine}
+      <p class="tally"><span class="tally-sword">⚔</span><span class="tally-num">${s.answers.filter(Boolean).length}</span> &nbsp;Victories Thus Far</p>`;
+    document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", ()=>handleAnswer(+b.dataset.i)));
+    return;
+  }
+
+  if (s.screen === "done") {
+    const msg = SCORE_MSGS[Math.min(s.myScore??0,5)];
+    const dateStr = new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+    // photo banner that varies by score outcome
+    const sc = s.myScore ?? 0;
+    let bannerTier = "tier-mid", bannerCap = "Wandering still…";
+    if (sc >= 4) { bannerTier = "tier-high"; bannerCap = "The Argonath honours you"; }
+    else if (sc <= 1) { bannerTier = "tier-low"; bannerCap = "Shadow takes the unworthy"; }
+    const doneBanner = `<div class="done-banner ${bannerTier}" aria-hidden="true">
+        <div class="done-banner-caption">${bannerCap}</div>
+      </div>`;
+    const emojiRow = s.finalAnswers.length>0
+      ? `<div class="emojis">${s.finalAnswers.map(c=>`
+          <span class="emoji-cell ${c?'win':'loss'}">
+            <svg width="22" height="22"><use href="#${c?'i-sword':'i-skull'}"/></svg>
+          </span>`).join("")}</div>` : "";
+
+    let lbHtml;
+    if (s.syncing || s.leaderboard===null) {
+      lbHtml = `<p class="center-note">Inscribing your name in the chronicle…</p>`;
+    } else if (!s.leaderboard.length) {
+      lbHtml = `<p class="center-note">No names yet recorded today.</p>`;
+    } else {
+      lbHtml = s.leaderboard.map(({name,score},i)=>{
+        const rank = i < 3
+          ? `<span class="lb-rank medal">${MEDALS[i]}</span>`
+          : `<span class="lb-rank">${ROMAN[i] || (i+1)}</span>`;
+        return `
+        <div class="lb-row ${name===s.playerName?'me':''}">
+          <div class="lb-left">
+            ${rank}
+            <span class="lb-name">${escHtml(name)}</span>
+            ${name===s.playerName?`<span class="lb-you">— you</span>`:""}
+          </div>
+          <span class="lb-score ${score===5?'perfect':''}">${score} <span style="opacity:0.4">/</span> 5</span>
+        </div>`;
+      }).join("");
+    }
+
+    app.innerHTML = `
+      ${miniLandscape()}
+      <div class="card" style="text-align:center; padding-top: 0;">
+        ${corners()}
+        ${doneBanner}
+        <div class="date-banner">${dateStr}</div>
+        <div class="score-frame">
+          <svg viewBox="0 0 220 220"><use href="#i-scoreframe"/></svg>
+          <div class="score-stack">
+            <span class="score-big">${s.myScore}</span><span class="score-denom">/5</span>
+            <span class="score-of">of Five Trials</span>
+          </div>
+        </div>
+        <div class="score-msg">${escHtml(msg)}</div>
+        ${emojiRow}
+        ${s.finalAnswers.length>0?`<button class="copy-btn" id="cb">${s.copied?"✓ Copied to share":"Copy your tale"}</button>`:""}
+      </div>
+      <div class="card">
+        ${corners()}
+        <div class="lb-title">Today's Chronicle</div>
+        ${lbHtml}
+        ${s.err?`<p class="err" style="margin-top:10px">${escHtml(s.err)}</p>`:""}
+      </div>
+      <p class="footer">
+        A new quest rises with the dusk.<br/>
+        <span class="small-flourish"><svg width="80" height="14"><use href="#i-flourish"/></svg></span>
+      </p>`;
+    const cb = document.getElementById("cb");
+    if (cb) cb.addEventListener("click", copyResult);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
