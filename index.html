@@ -623,6 +623,45 @@ input[type=text]:focus {
 
 .center-note { text-align: center; color: var(--parchment-dim); font-style: italic; padding: 1.25rem 0; font-size: 15px; }
 
+/* ─── Two-player name picker ─── */
+.player-select { display: flex; gap: 14px; margin-top: 4px; }
+.player-btn {
+  flex: 1;
+  padding: 22px 10px 18px;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  border: 1px solid var(--gold-deep);
+  background: linear-gradient(180deg, rgba(201,161,74,0.04), rgba(201,161,74,0.10));
+  color: var(--gold-bright);
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.player-btn:hover {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(201,161,74,0.12), rgba(201,161,74,0.22));
+  box-shadow: 0 0 28px rgba(201,161,74,0.25);
+}
+.player-btn-name { font-size: 24px; letter-spacing: 0.10em; }
+.player-btn-sub  { font-family: 'IM Fell English', serif; font-size: 12px; color: var(--parchment-faint); font-style: italic; font-weight: normal; letter-spacing: 0; text-transform: none; }
+
+/* ─── Reset / play-again link ─── */
+.reset-link {
+  display: block; text-align: center;
+  font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--parchment-faint);
+  cursor: pointer;
+  margin-top: 18px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  background: none; border: none; padding: 0;
+}
+.reset-link:hover { opacity: 1; color: var(--gold); }
+
 /* Mini landscape (above quiz/score screens, smaller) */
 .mini-landscape {
   position: relative;
@@ -655,9 +694,9 @@ input[type=text]:focus {
   background: linear-gradient(180deg, rgba(10,8,5,0.15) 0%, rgba(10,8,5,0.5) 60%, rgba(10,8,5,1) 100%);
   pointer-events: none;
 }
-.done-banner.tier-high { background-image: url("./done-argonath.jpg"); }
-.done-banner.tier-mid  { background-image: url("./done-moria.jpg"); }
-.done-banner.tier-low  { background-image: url("./done-witchking.jpg"); }
+.done-banner.tier-high { background-image: url("./done-argonath.jpg"); background-position: center 25%; }
+.done-banner.tier-mid  { background-image: url("./done-moria.jpg"); background-position: center 40%; }
+.done-banner.tier-low  { background-image: url("./done-witchking.jpg"); background-position: center 20%; }
 /* tier-specific tinting / glow at the bottom edge for mood */
 .done-banner.tier-high { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.4), inset 0 -2px 0 rgba(201,161,74,0.4); }
 .done-banner.tier-low  { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.6), inset 0 -2px 0 rgba(168,56,40,0.5); }
@@ -953,27 +992,27 @@ const ALL_Q = [
   { q: "What race is Gimli?", opts: ["Dwarf","Hobbit","Man","Elf"], a: 0, diff: 1 },
   { q: "What colour does Gandalf wear after returning from death?", opts: ["White","Silver","Gold","Grey"], a: 0, diff: 1 },
   { q: "Which Hobbit accompanies Frodo all the way to Mount Doom?", opts: ["Samwise Gamgee","Merry","Pippin","Bilbo"], a: 0, diff: 1 },
-  { q: "What is Frodo's elvish blade called?", opts: ["Sting","Andúril","Orcrist","Glamdring"], a: 0, diff: 1 },
+  { q: "What is Frodo's elvish blade called?", opts: ["Sting","Andúril","Orcrist","Glamdring"], a: 0, diff: 2 },
 
   { q: "What elvish word is the password to the Mines of Moria?", opts: ["Mellon","Calad","Ithil","Elendil"], a: 0, diff: 2 },
-  { q: "Who delivers the killing blow to the Witch-king of Angmar?", opts: ["Éowyn","Merry","Aragorn","Gandalf"], a: 0, diff: 2 },
+  { q: "Who delivers the killing blow to the Witch-king of Angmar?", opts: ["Éowyn","Merry","Aragorn","Gandalf"], a: 0, diff: 3 },
   { q: "Who is the Lady of Lothlórien?", opts: ["Galadriel","Arwen","Éowyn","Goldberry"], a: 0, diff: 2 },
-  { q: "What is the name of Gandalf's horse?", opts: ["Shadowfax","Bill","Arod","Hasufel"], a: 0, diff: 2 },
+  { q: "What is the name of Gandalf's horse?", opts: ["Shadowfax","Bill","Arod","Hasufel"], a: 0, diff: 3 },
   { q: "Who attempts to seize the Ring and breaks the Fellowship?", opts: ["Boromir","Gimli","Faramir","Denethor"], a: 0, diff: 2 },
   { q: "Which wizard is corrupted and serves Sauron?", opts: ["Saruman","Gandalf","Radagast","Pallando"], a: 0, diff: 2 },
-  { q: "What is the name of Aragorn's reforged sword?", opts: ["Andúril","Sting","Glamdring","Orcrist"], a: 0, diff: 2 },
-  { q: "What is the name of the Hobbit village where Frodo grows up?", opts: ["Hobbiton","Bree","Michel Delving","Tuckborough"], a: 0, diff: 2 },
+  { q: "What is the name of Aragorn's reforged sword?", opts: ["Andúril","Sting","Glamdring","Orcrist"], a: 0, diff: 3 },
+  { q: "What is the name of the Hobbit village where Frodo grows up?", opts: ["Hobbiton","Bree","Michel Delving","Tuckborough"], a: 0, diff: 1 },
 
   { q: "What type of creature is Treebeard?", opts: ["An Ent","A troll","A giant","A Huorn"], a: 0, diff: 3 },
-  { q: "Who forged the One Ring?", opts: ["Sauron","Morgoth","Saruman","Celebrimbor"], a: 0, diff: 3 },
+  { q: "Who forged the One Ring?", opts: ["Sauron","Morgoth","Saruman","Celebrimbor"], a: 0, diff: 2 },
   { q: "At which inn does Frodo first meet Aragorn?", opts: ["The Prancing Pony","The Green Dragon","The Golden Perch","The Ivy Bush"], a: 0, diff: 3 },
   { q: "What creature is Shelob?", opts: ["A giant spider","A cave troll","A giant bat","A warg"], a: 0, diff: 3 },
-  { q: "What are Sauron's nine undead servants called?", opts: ["Nazgûl","Balrogs","Uruk-hai","Barrow-wights"], a: 0, diff: 3 },
-  { q: "In which ancient forest do the Ents live?", opts: ["Fangorn","Mirkwood","The Old Forest","Lothlórien"], a: 0, diff: 3 },
+  { q: "What are Sauron's nine undead servants called?", opts: ["Nazgûl","Balrogs","Uruk-hai","Barrow-wights"], a: 0, diff: 2 },
+  { q: "In which ancient forest do the Ents live?", opts: ["Fangorn","Mirkwood","The Old Forest","Lothlórien"], a: 0, diff: 4 },
   { q: "What Elvish tree-realm does the Fellowship rest in?", opts: ["Lothlórien","Rivendell","Mirkwood","Lindon"], a: 0, diff: 3 },
   { q: "Who does Aragorn marry?", opts: ["Arwen","Éowyn","Galadriel","Goldberry"], a: 0, diff: 3 },
 
-  { q: "Who is the lord of Rivendell?", opts: ["Elrond","Círdan","Celeborn","Thranduil"], a: 0, diff: 4 },
+  { q: "Who is the lord of Rivendell?", opts: ["Elrond","Círdan","Celeborn","Thranduil"], a: 0, diff: 2 },
   { q: "Where does the Council take place to decide the fate of the Ring?", opts: ["Rivendell","Lothlórien","Minas Tirith","Edoras"], a: 0, diff: 4 },
   { q: "What is Sauron's great dark fortress called?", opts: ["Barad-dûr","Minas Morgul","Orthanc","Dol Guldur"], a: 0, diff: 4 },
   { q: "Who guards the Bridge of Khazad-dûm against the Fellowship?", opts: ["Durin's Bane — a Balrog","A cave troll","An ancient dragon","A Ringwraith"], a: 0, diff: 4 },
@@ -1037,6 +1076,15 @@ function getDateKey() {
   return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth()+1).padStart(2,"0")}-${String(shifted.getUTCDate()).padStart(2,"0")}`;
 }
 
+function getPrevDateKey() {
+  // same logic but 24 hours earlier — gives the previous game-day key
+  const prevUtcMs = Date.now() - 24 * 3600 * 1000;
+  const shifted = new Date(prevUtcMs + IST_OFFSET_MIN*60*1000 - ROLLOVER_HOUR*3600*1000);
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth()+1).padStart(2,"0")}-${String(shifted.getUTCDate()).padStart(2,"0")}`;
+}
+
+const PLAYERS = ["Apurve", "Prerna"]; // the two players — hardcoded
+
 function getDailyQuestions() {
   const dk = getDateKey();
   let seed = 0;
@@ -1080,9 +1128,12 @@ async function saveScore(name, score) {
   return record;
 }
 
+const PLAYER_KEY = "lotrquiz_player"; // persists forever in this browser
+
 let state = {
   screen: "name",
-  nameInput: "", playerName: "",
+  playerName: "",
+  waitingFor: "",      // name of the player blocking today's unlock
   questions: getDailyQuestions(),
   qIdx: 0, answers: [], finalAnswers: [],
   selected: null, feedback: false,
@@ -1210,19 +1261,33 @@ function peaksRow(level) {
   return html + `</span>`;
 }
 
-async function handleStart() {
-  const n = state.nameInput.trim();
-  if (!n) return;
-  setState({ playerName: n, screen: "checking", err: "" });
+async function handleStart(name) {
+  if (!name) return;
+  localStorage.setItem(PLAYER_KEY, name);   // remember forever
+  setState({ playerName: name, screen: "checking", err: "" });
   try {
     const record = await readBin();
-    const dk = getDateKey();
-    const today = record.scores?.[dk] || {};
-    if (today[n] !== undefined) {
+    const dk     = getDateKey();
+    const prevDk = getPrevDateKey();
+    const today  = record.scores?.[dk]     || {};
+    const prev   = record.scores?.[prevDk] || {};
+
+    if (today[name] !== undefined) {
+      // Already played today — go straight to results
       const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
-      setState({ myScore: today[n], leaderboard: lb, screen: "done" });
+      setState({ myScore: today[name], leaderboard: lb, screen: "done" });
     } else {
-      setState({ screen: "quiz" });
+      // Check if both players finished yesterday before unlocking today
+      // (skip the gate on day 1 — no previous scores at all)
+      const prevHasAny = Object.keys(prev).length > 0;
+      const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
+      if (prevComplete) {
+        setState({ screen: "quiz" });
+      } else {
+        // Find who hasn't played yet
+        const missing = PLAYERS.find(p => prev[p] === undefined);
+        setState({ screen: "locked", waitingFor: missing });
+      }
     }
   } catch(e) {
     setState({ err: "The palantír is clouded — check your connection.", screen: "name" });
@@ -1281,21 +1346,50 @@ function render() {
         ${corners()}
         ${s.screen === "checking"
           ? `<p class="center-note">Consulting the palantír…</p>`
-          : `<label>What is your name, traveller?</label>
-             <input type="text" id="ni" placeholder="e.g. Frodo of the Shire" value="${escHtml(s.nameInput)}" autocomplete="off" />
+          : `<label>Who answers the call?</label>
              ${s.err ? `<p class="err">${escHtml(s.err)}</p>` : ""}
-             <button class="btn" id="sb"><span class="btn-ornament">❖</span>Begin the Quest<span class="btn-ornament">❖</span></button>
-             <p class="hint">Already journeyed today? Enter the same name to see the roll.</p>`
+             <div class="player-select">
+               <button class="player-btn" id="pb-apurve">
+                 <span class="player-btn-name">Apurve</span>
+                 <span class="player-btn-sub">The Ranger</span>
+               </button>
+               <button class="player-btn" id="pb-prerna">
+                 <span class="player-btn-name">Prerna</span>
+                 <span class="player-btn-sub">The Lore-keeper</span>
+               </button>
+             </div>
+             <p class="hint">Already played today? Tap your name to see the roll.</p>`
         }
       </div>
       `;
     if (s.screen === "name") {
-      const inp = document.getElementById("ni");
-      inp.addEventListener("input", e => { state.nameInput = e.target.value; });
-      inp.addEventListener("keydown", e => { if (e.key === "Enter") handleStart(); });
-      inp.focus();
-      document.getElementById("sb").addEventListener("click", handleStart);
+      document.getElementById("pb-apurve").addEventListener("click", () => handleStart("Apurve"));
+      document.getElementById("pb-prerna").addEventListener("click", () => handleStart("Prerna"));
     }
+    wireHero();
+    return;
+  }
+
+  if (s.screen === "locked") {
+    const other = escHtml(s.waitingFor || "your companion");
+    app.innerHTML = `
+      ${heroBlock()}
+      <div class="title-block">
+        <h1>The Daily Quest</h1>
+        <p class="sub">Five questions of Middle-earth · ascending in peril<br/>a new quest rises at dusk (7 PM IST)</p>
+      </div>
+      ${flourish()}
+      <div class="card" style="text-align:center;">
+        ${corners()}
+        <div style="font-size:36px; margin-bottom:16px; filter:drop-shadow(0 0 14px rgba(168,56,40,0.6))">🔒</div>
+        <div style="font-family:'Cinzel',serif; font-size:13px; letter-spacing:0.25em; color:var(--gold); text-transform:uppercase; margin-bottom:16px;">The Gates Are Sealed</div>
+        <p style="font-family:'IM Fell English',serif; font-size:18px; color:var(--parchment); line-height:1.7; margin-bottom:12px;">
+          ${other} has yet to answer yesterday's call.
+        </p>
+        <p style="font-style:italic; font-size:14px; color:var(--parchment-dim); line-height:1.6;">
+          Both companions must complete each day's quest before the next path opens. Check back once ${other} has played.
+        </p>
+      </div>`;
     wireHero();
     return;
   }
@@ -1408,13 +1502,20 @@ function render() {
       <p class="footer">
         A new quest rises with the dusk.<br/>
         <span class="small-flourish"><svg width="80" height="14"><use href="#i-flourish"/></svg></span>
-      </p>`;
+      </p>
+`;
     const cb = document.getElementById("cb");
     if (cb) cb.addEventListener("click", copyResult);
   }
 }
 
-render();
+// ── Boot: if this browser already knows who the player is, skip the picker ──
+const _savedPlayer = localStorage.getItem(PLAYER_KEY);
+if (_savedPlayer) {
+  handleStart(_savedPlayer);   // goes straight to checking → quiz or done
+} else {
+  render();                    // show the one-time player picker
+}
 </script>
 </body>
 </html>
