@@ -49,7 +49,7 @@ body {
 /* cinematic background photo — Fellowship marching, sits below everything */
 .bg-photo {
   position: fixed; inset: 0; pointer-events: none; z-index: -1;
-  background-image: url("./images/bg-fellowship.jpg");
+  background-image: url("./bg-fellowship.jpg");
   background-size: cover;
   background-position: center 30%;
   background-repeat: no-repeat;
@@ -655,9 +655,9 @@ input[type=text]:focus {
   background: linear-gradient(180deg, rgba(10,8,5,0.15) 0%, rgba(10,8,5,0.5) 60%, rgba(10,8,5,1) 100%);
   pointer-events: none;
 }
-.done-banner.tier-high { background-image: url("./images/done-argonath.jpg"); }
-.done-banner.tier-mid  { background-image: url("./images/done-moria.jpg"); }
-.done-banner.tier-low  { background-image: url("./images/done-witchking.jpg"); }
+.done-banner.tier-high { background-image: url("./done-argonath.jpg"); }
+.done-banner.tier-mid  { background-image: url("./done-moria.jpg"); }
+.done-banner.tier-low  { background-image: url("./done-witchking.jpg"); }
 /* tier-specific tinting / glow at the bottom edge for mood */
 .done-banner.tier-high { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.4), inset 0 -2px 0 rgba(201,161,74,0.4); }
 .done-banner.tier-low  { box-shadow: inset 0 -50px 80px rgba(10,8,5,0.95), inset 0 30px 60px rgba(10,8,5,0.6), inset 0 -2px 0 rgba(168,56,40,0.5); }
@@ -1122,7 +1122,7 @@ function heroBlock() {
 // ─── Hero image dropzone (localStorage-backed, persists in any browser) ───
 // Default fallback: the One Ring photo. User can drop their own to override.
 const HERO_KEY = "lotrquiz_hero_image";
-const HERO_DEFAULT = "./images/hero-ring.jpg";
+const HERO_DEFAULT = "./hero-ring.jpg";
 function applyStoredHero(dz, img) {
   const stored = localStorage.getItem(HERO_KEY);
   if (stored) {
