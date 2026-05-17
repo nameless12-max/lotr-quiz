@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Daily Quest · A Chronicle of Middle Lore</title>
+<title>The Daily Quest · A Chronicle of Many Lores</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet">
@@ -774,6 +774,31 @@ input[type=text]:focus {
   z-index: 2;
 }
 
+/* ─── Subject badge on question card ─── */
+.q-subject {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-bottom: 10px;
+}
+.q-subject.subj-lotr { background: rgba(201,161,74,0.15); color: var(--gold); border: 1px solid rgba(201,161,74,0.35); }
+.q-subject.subj-hp   { background: rgba(90,80,170,0.18); color: #b0a0f0; border: 1px solid rgba(130,120,200,0.4); }
+.q-subject.subj-bolly { background: rgba(220,80,120,0.15); color: #f0a0b0; border: 1px solid rgba(220,100,140,0.4); }
+
+/* ─── Rune tile subject dot ─── */
+.rune-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+}
+.rune-dot.dot-lotr  { background: var(--gold); }
+.rune-dot.dot-hp    { background: #9080d0; }
+.rune-dot.dot-bolly { background: #e07898; }
+
 @media (max-width: 480px) {
   h1 { font-size: 26px; letter-spacing: 0.18em; }
   .q-text { font-size: 20px; }
@@ -1046,69 +1071,119 @@ input[type=text]:focus {
 const BIN_ID = "6a08b151250b1311c35da367";
 const MASTER_KEY = "$2a$10$xKQ.upMZOGGmWz2D6rfSsOnUoMqVxPsU87W7MjOYtm5vL4r1TYp7e";
 
-const ALL_Q = [
-  { q: "Who carries the One Ring into Mordor to destroy it?", opts: ["Frodo Baggins","Gandalf","Samwise Gamgee","Aragorn"], a: 0, diff: 1 },
-  { q: "Where is the One Ring finally destroyed?", opts: ["Mount Doom","Rivendell","Barad-dûr","The Dead Marshes"], a: 0, diff: 1 },
-  { q: "What is the name of Frodo's home in the Shire?", opts: ["Bag End","Bywater","Buckland","Overhill"], a: 0, diff: 1 },
-  { q: "What does Gollum call the One Ring?", opts: ["My Precious","The One","Master","My Love"], a: 0, diff: 1 },
-  { q: "What race is Gimli?", opts: ["Dwarf","Hobbit","Man","Elf"], a: 0, diff: 1 },
-  { q: "What colour does Gandalf wear after returning from death?", opts: ["White","Silver","Gold","Grey"], a: 0, diff: 1 },
-  { q: "Which Hobbit accompanies Frodo all the way to Mount Doom?", opts: ["Samwise Gamgee","Merry","Pippin","Bilbo"], a: 0, diff: 1 },
-  { q: "What is Frodo's elvish blade called?", opts: ["Sting","Andúril","Orcrist","Glamdring"], a: 0, diff: 2 },
-
-  { q: "What elvish word is the password to the Mines of Moria?", opts: ["Mellon","Calad","Ithil","Elendil"], a: 0, diff: 2 },
-  { q: "Who delivers the killing blow to the Witch-king of Angmar?", opts: ["Éowyn","Merry","Aragorn","Gandalf"], a: 0, diff: 3 },
-  { q: "Who is the Lady of Lothlórien?", opts: ["Galadriel","Arwen","Éowyn","Goldberry"], a: 0, diff: 2 },
-  { q: "What is the name of Gandalf's horse?", opts: ["Shadowfax","Bill","Arod","Hasufel"], a: 0, diff: 3 },
-  { q: "Who attempts to seize the Ring and breaks the Fellowship?", opts: ["Boromir","Gimli","Faramir","Denethor"], a: 0, diff: 2 },
-  { q: "Which wizard is corrupted and serves Sauron?", opts: ["Saruman","Gandalf","Radagast","Pallando"], a: 0, diff: 2 },
-  { q: "What is the name of Aragorn's reforged sword?", opts: ["Andúril","Sting","Glamdring","Orcrist"], a: 0, diff: 3 },
-  { q: "What is the name of the Hobbit village where Frodo grows up?", opts: ["Hobbiton","Bree","Michel Delving","Tuckborough"], a: 0, diff: 1 },
-
-  { q: "What type of creature is Treebeard?", opts: ["An Ent","A troll","A giant","A Huorn"], a: 0, diff: 3 },
-  { q: "Who forged the One Ring?", opts: ["Sauron","Morgoth","Saruman","Celebrimbor"], a: 0, diff: 2 },
-  { q: "At which inn does Frodo first meet Aragorn?", opts: ["The Prancing Pony","The Green Dragon","The Golden Perch","The Ivy Bush"], a: 0, diff: 3 },
-  { q: "What creature is Shelob?", opts: ["A giant spider","A cave troll","A giant bat","A warg"], a: 0, diff: 3 },
-  { q: "What are Sauron's nine undead servants called?", opts: ["Nazgûl","Balrogs","Uruk-hai","Barrow-wights"], a: 0, diff: 2 },
-  { q: "In which ancient forest do the Ents live?", opts: ["Fangorn","Mirkwood","The Old Forest","Lothlórien"], a: 0, diff: 4 },
-  { q: "What Elvish tree-realm does the Fellowship rest in?", opts: ["Lothlórien","Rivendell","Mirkwood","Lindon"], a: 0, diff: 3 },
-  { q: "Who does Aragorn marry?", opts: ["Arwen","Éowyn","Galadriel","Goldberry"], a: 0, diff: 3 },
-
-  { q: "Who is the lord of Rivendell?", opts: ["Elrond","Círdan","Celeborn","Thranduil"], a: 0, diff: 2 },
-  { q: "Where does the Council take place to decide the fate of the Ring?", opts: ["Rivendell","Lothlórien","Minas Tirith","Edoras"], a: 0, diff: 4 },
-  { q: "What is Sauron's great dark fortress called?", opts: ["Barad-dûr","Minas Morgul","Orthanc","Dol Guldur"], a: 0, diff: 4 },
-  { q: "Who guards the Bridge of Khazad-dûm against the Fellowship?", opts: ["Durin's Bane — a Balrog","A cave troll","An ancient dragon","A Ringwraith"], a: 0, diff: 4 },
-  { q: "Who ultimately leads the Fellowship of the Ring?", opts: ["Gandalf","Aragorn","Boromir","Frodo"], a: 0, diff: 4 },
-  { q: "How many rings of power were given to mortal Men?", opts: ["Nine","Three","Seven","Twelve"], a: 0, diff: 4 },
-  { q: "How many rings of power were given to the Dwarf lords?", opts: ["Seven","Three","Nine","Twelve"], a: 0, diff: 4 },
-  { q: "What is Sam's wife's name?", opts: ["Rosie Cotton","Pearl Took","Lobelia","Ruby"], a: 0, diff: 4 },
-
-  { q: "Who is Legolas's father?", opts: ["Thranduil","Elrond","Celeborn","Círdan"], a: 0, diff: 5 },
-  { q: "How old is Bilbo at his famous farewell birthday party?", opts: ["111","100","120","108"], a: 0, diff: 5 },
-  { q: "What is the name of Saruman's tower?", opts: ["Orthanc","Barad-dûr","Dol Guldur","Minas Morgul"], a: 0, diff: 5 },
-  { q: "Who is the Steward of Gondor during the War of the Ring?", opts: ["Denethor","Boromir","Faramir","Húrin"], a: 0, diff: 5 },
-  { q: "What is a Palantír?", opts: ["A seeing stone","An elvish sword","A ring of power","A map of Middle-earth"], a: 0, diff: 5 },
-  { q: "Who is King of Rohan during the War of the Ring?", opts: ["Théoden","Éomer","Théodred","Grima Wormtongue"], a: 0, diff: 5 },
-  { q: "What is Bilbo's famous written memoir called?", opts: ["There and Back Again","The Red Book of Westmarch","A Long-Expected Party","Adventures Underground"], a: 0, diff: 5 },
-  { q: "Where do the Elves sail at the end of the Third Age?", opts: ["Valinor — the Undying Lands","Númenor","Lindon","The Grey Havens (staying)"], a: 0, diff: 5 },
+// ── LOTR questions (3 tiers: easy/medium/hard) ───────────────────────────
+const LOTR_Q = [
+  // Easy (tier 1)
+  { q: "Who carries the One Ring into Mordor to destroy it?", opts: ["Frodo Baggins","Gandalf","Samwise Gamgee","Aragorn"], a: 0, diff: 1, cat: "lotr" },
+  { q: "Where is the One Ring finally destroyed?", opts: ["Mount Doom","Rivendell","Barad-dûr","The Dead Marshes"], a: 0, diff: 1, cat: "lotr" },
+  { q: "What is the name of Frodo's home in the Shire?", opts: ["Bag End","Bywater","Buckland","Overhill"], a: 0, diff: 1, cat: "lotr" },
+  { q: "What does Gollum call the One Ring?", opts: ["My Precious","The One","Master","My Love"], a: 0, diff: 1, cat: "lotr" },
+  { q: "What race is Gimli?", opts: ["Dwarf","Hobbit","Man","Elf"], a: 0, diff: 1, cat: "lotr" },
+  { q: "What colour does Gandalf wear after returning from death?", opts: ["White","Silver","Gold","Grey"], a: 0, diff: 1, cat: "lotr" },
+  { q: "Which Hobbit accompanies Frodo all the way to Mount Doom?", opts: ["Samwise Gamgee","Merry","Pippin","Bilbo"], a: 0, diff: 1, cat: "lotr" },
+  { q: "What is the name of the Hobbit village where Frodo grows up?", opts: ["Hobbiton","Bree","Michel Delving","Tuckborough"], a: 0, diff: 1, cat: "lotr" },
+  // Medium (tier 2)
+  { q: "What is Frodo's elvish blade called?", opts: ["Sting","Andúril","Orcrist","Glamdring"], a: 0, diff: 2, cat: "lotr" },
+  { q: "What elvish word is the password to the Mines of Moria?", opts: ["Mellon","Calad","Ithil","Elendil"], a: 0, diff: 2, cat: "lotr" },
+  { q: "Who is the Lady of Lothlórien?", opts: ["Galadriel","Arwen","Éowyn","Goldberry"], a: 0, diff: 2, cat: "lotr" },
+  { q: "Who attempts to seize the Ring and breaks the Fellowship?", opts: ["Boromir","Gimli","Faramir","Denethor"], a: 0, diff: 2, cat: "lotr" },
+  { q: "Which wizard is corrupted and serves Sauron?", opts: ["Saruman","Gandalf","Radagast","Pallando"], a: 0, diff: 2, cat: "lotr" },
+  { q: "Who forged the One Ring?", opts: ["Sauron","Morgoth","Saruman","Celebrimbor"], a: 0, diff: 2, cat: "lotr" },
+  { q: "What are Sauron's nine undead servants called?", opts: ["Nazgûl","Balrogs","Uruk-hai","Barrow-wights"], a: 0, diff: 2, cat: "lotr" },
+  { q: "Who is the lord of Rivendell?", opts: ["Elrond","Círdan","Celeborn","Thranduil"], a: 0, diff: 2, cat: "lotr" },
+  // Hard (tier 3)
+  { q: "Who delivers the killing blow to the Witch-king of Angmar?", opts: ["Éowyn","Merry","Aragorn","Gandalf"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What is the name of Gandalf's horse?", opts: ["Shadowfax","Bill","Arod","Hasufel"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What is the name of Aragorn's reforged sword?", opts: ["Andúril","Sting","Glamdring","Orcrist"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What type of creature is Treebeard?", opts: ["An Ent","A troll","A giant","A Huorn"], a: 0, diff: 3, cat: "lotr" },
+  { q: "At which inn does Frodo first meet Aragorn?", opts: ["The Prancing Pony","The Green Dragon","The Golden Perch","The Ivy Bush"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What creature is Shelob?", opts: ["A giant spider","A cave troll","A giant bat","A warg"], a: 0, diff: 3, cat: "lotr" },
+  { q: "Who is Legolas's father?", opts: ["Thranduil","Elrond","Celeborn","Círdan"], a: 0, diff: 3, cat: "lotr" },
+  { q: "How old is Bilbo at his famous farewell birthday party?", opts: ["111","100","120","108"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What is Sauron's great dark fortress called?", opts: ["Barad-dûr","Minas Morgul","Orthanc","Dol Guldur"], a: 0, diff: 3, cat: "lotr" },
+  { q: "Who is the Steward of Gondor during the War of the Ring?", opts: ["Denethor","Boromir","Faramir","Húrin"], a: 0, diff: 3, cat: "lotr" },
+  { q: "What is a Palantír?", opts: ["A seeing stone","An elvish sword","A ring of power","A map of Middle-earth"], a: 0, diff: 3, cat: "lotr" },
+  { q: "Where do the Elves sail at the end of the Third Age?", opts: ["Valinor — the Undying Lands","Númenor","Lindon","The Grey Havens (staying)"], a: 0, diff: 3, cat: "lotr" },
 ];
 
-const TAUNTS = [
+// ── Harry Potter questions (3 tiers: easy/medium/hard) ───────────────────
+const HP_Q = [
+  // Easy (tier 1)
+  { q: "What house at Hogwarts is Harry Potter sorted into?", opts: ["Gryffindor","Slytherin","Ravenclaw","Hufflepuff"], a: 0, diff: 1, cat: "hp" },
+  { q: "What is the name of Harry's pet owl?", opts: ["Hedwig","Errol","Pigwidgeon","Scabbers"], a: 0, diff: 1, cat: "hp" },
+  { q: "Who is Harry Potter's best female friend?", opts: ["Hermione Granger","Ginny Weasley","Luna Lovegood","Cho Chang"], a: 0, diff: 1, cat: "hp" },
+  { q: "What sport do wizards play on broomsticks?", opts: ["Quidditch","Broomball","Skychase","Wronski"], a: 0, diff: 1, cat: "hp" },
+  { q: "Who is the headmaster of Hogwarts when Harry arrives?", opts: ["Albus Dumbledore","Severus Snape","Minerva McGonagall","Cornelius Fudge"], a: 0, diff: 1, cat: "hp" },
+  { q: "What is Lord Voldemort's real name?", opts: ["Tom Riddle","Salazar Slytherin","Gellert Grindelwald","Marvolo Gaunt"], a: 0, diff: 1, cat: "hp" },
+  { q: "What platform at King's Cross leads to the Hogwarts Express?", opts: ["9¾","7½","10¼","8⅓"], a: 0, diff: 1, cat: "hp" },
+  { q: "Which Hogwarts house values cunning and ambition?", opts: ["Slytherin","Ravenclaw","Hufflepuff","Gryffindor"], a: 0, diff: 1, cat: "hp" },
+  // Medium (tier 2)
+  { q: "What is the core of Harry's wand?", opts: ["Phoenix feather","Dragon heartstring","Unicorn hair","Thestral tail"], a: 0, diff: 2, cat: "hp" },
+  { q: "What potion allows the drinker to assume another person's appearance?", opts: ["Polyjuice Potion","Felix Felicis","Veritaserum","Amortentia"], a: 0, diff: 2, cat: "hp" },
+  { q: "What is a Horcrux?", opts: ["An object hiding part of a soul","A dark spell","A cursed artefact","A type of wand"], a: 0, diff: 2, cat: "hp" },
+  { q: "Who is the Half-Blood Prince?", opts: ["Severus Snape","Albus Dumbledore","Tom Riddle","Draco Malfoy"], a: 0, diff: 2, cat: "hp" },
+  { q: "What form does Harry's Patronus take?", opts: ["A stag","A doe","A phoenix","A wolf"], a: 0, diff: 2, cat: "hp" },
+  { q: "What creature guards the vaults at Gringotts?", opts: ["Dragons","Goblins","Trolls","Sphinxes"], a: 0, diff: 2, cat: "hp" },
+  { q: "Who kills Dumbledore at the top of the Astronomy Tower?", opts: ["Severus Snape","Draco Malfoy","Bellatrix Lestrange","Voldemort"], a: 0, diff: 2, cat: "hp" },
+  { q: "What does the Mirror of Erised show?", opts: ["Your deepest desire","The future","Your worst fear","The past"], a: 0, diff: 2, cat: "hp" },
+  // Hard (tier 3)
+  { q: "What are the three Deathly Hallows?", opts: ["Elder Wand, Resurrection Stone, Cloak of Invisibility","Sword, Stone, Cloak","Wand, Ring, Mirror","Cup, Locket, Diadem"], a: 0, diff: 3, cat: "hp" },
+  { q: "Who destroyed the Horcrux inside Hufflepuff's cup?", opts: ["Hermione Granger","Ron Weasley","Harry Potter","Neville Longbottom"], a: 0, diff: 3, cat: "hp" },
+  { q: "What is the address of the Order of the Phoenix headquarters?", opts: ["12 Grimmauld Place","4 Privet Drive","The Burrow","Shell Cottage"], a: 0, diff: 3, cat: "hp" },
+  { q: "What was the first Horcrux Dumbledore destroyed?", opts: ["Marvolo Gaunt's ring","Tom Riddle's diary","Slytherin's locket","Ravenclaw's diadem"], a: 0, diff: 3, cat: "hp" },
+  { q: "Who was the original owner of the Elder Wand, according to legend?", opts: ["Antioch Peverell","Cadmus Peverell","Ignotus Peverell","Salazar Slytherin"], a: 0, diff: 3, cat: "hp" },
+  { q: "What spell does Hermione use to erase her parents' memories?", opts: ["Obliviate","Confundo","Stupefy","Petrificus Totalus"], a: 0, diff: 3, cat: "hp" },
+  { q: "What is the name of the house-elf who serves the Black family?", opts: ["Kreacher","Dobby","Winky","Hokey"], a: 0, diff: 3, cat: "hp" },
+  { q: "What potion is known as 'liquid luck'?", opts: ["Felix Felicis","Amortentia","Wolfsbane","Draught of Living Death"], a: 0, diff: 3, cat: "hp" },
+];
+
+// ── Bollywood gossip questions (all-time, single tier) ───────────────────
+const BOLLY_Q = [
+  { q: "Which Bollywood couple is famously called 'DeepVeer'?", opts: ["Deepika Padukone & Ranveer Singh","Deepika & Ranbir Kapoor","Deepika & Shahid Kapoor","Deepika & Vicky Kaushal"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Who was the host of Bigg Boss for over a decade?", opts: ["Salman Khan","Shah Rukh Khan","Amitabh Bachchan","Akshay Kumar"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which actress left Bollywood after marrying a cricket legend?", opts: ["Anushka Sharma","Deepika Padukone","Katrina Kaif","Alia Bhatt"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Kareena and Saif named their first son what unusual name?", opts: ["Taimur","Abram","Viaan","Azad"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which actor is known as 'Bhai' by his fans?", opts: ["Salman Khan","Aamir Khan","Shah Rukh Khan","Ajay Devgn"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Aishwarya Rai won Miss World in which year?", opts: ["1994","1992","1996","2000"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which real-life couple starred together in 'Ram-Leela'?", opts: ["Deepika & Ranveer","Ranbir & Alia","Anushka & Virat","Katrina & Vicky"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Alia Bhatt is married to which actor?", opts: ["Ranbir Kapoor","Varun Dhawan","Sidharth Malhotra","Arjun Kapoor"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which director is Karan Johar's production house named after?", opts: ["His father Yash Johar — Dharma Productions","Himself — Karan Films","His mother — Hiroo Productions","His guru — Aditya Chopra Studios"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which Bollywood star is known as 'King Khan'?", opts: ["Shah Rukh Khan","Aamir Khan","Saif Ali Khan","Salman Khan"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Katrina Kaif married which actor in a Rajasthan wedding?", opts: ["Vicky Kaushal","Ranbir Kapoor","Salman Khan","Hrithik Roshan"], a: 0, diff: 2, cat: "bolly" },
+  { q: "Which couple's divorce shook Bollywood in 2016–17?", opts: ["Hrithik Roshan & Sussanne Khan","Aamir Khan & Kiran Rao","Farhan Akhtar & Adhuna","Arbaaz Khan & Malaika Arora"], a: 0, diff: 2, cat: "bolly" },
+];
+
+const TAUNTS_LOTR = [
   "A child of the Shire would have known that.",
   "Even an Orc could've guessed better.",
   "Saruman is laughing somewhere.",
-  "Did you skip the movies AND the books?",
   "Gollum knows more than you, precious.",
-  "The Witch-king is unimpressed.",
   "Boromir died for this and you can't even answer it.",
-  "A Hobbit lass half your age would scoff.",
   "Sauron just smiled. That's bad.",
-  "Treebeard would say this is too hasty… and wrong.",
   "Even Pippin wouldn't have fumbled that one.",
   "Mordor called. They want their dignity back.",
 ];
-
-const PRAISES = [
+const TAUNTS_HP = [
+  "A first-year Muggle-born could do better.",
+  "Even Neville got that right in the books.",
+  "Voldemort didn't die for you to be this clueless.",
+  "Snape would deduct 50 points for that answer.",
+  "Hermione is disappointed. Severely.",
+  "A Squib would outscore you at this rate.",
+  "Even Crabbe and Goyle knew that one.",
+  "The Sorting Hat would put you in detention.",
+];
+const TAUNTS_BOLLY = [
+  "Even your relatives' WhatsApp group knows this.",
+  "Did you just arrive from another planet?",
+  "Karan Johar just clutched his pearls.",
+  "Instagram exists, you know.",
+  "Every auto driver in Mumbai could answer that.",
+  "Filmfare called. They're embarrassed for you.",
+  "Even a Bigg Boss elimination is less painful than this.",
+  "Salman Bhai is disappointed.",
+];
+const PRAISES_LOTR = [
   "Well struck, traveller.",
   "Elrond nods in approval.",
   "Galadriel saw this coming.",
@@ -1116,18 +1191,42 @@ const PRAISES = [
   "A true student of the Red Book.",
   "Not bad for a Halfling.",
 ];
+const PRAISES_HP = [
+  "Outstanding — that's an O on your O.W.L.",
+  "Dumbledore's Army would be proud.",
+  "10 points to your house!",
+  "Hermione-level recall. Impressive.",
+  "The Room of Requirement just opened for you.",
+  "Lumos! Your mind is clearly lit.",
+];
+const PRAISES_BOLLY = [
+  "Full gossip aunty energy. Respect.",
+  "You clearly follow everyone on Instagram.",
+  "Koffee with Karan finalist, honestly.",
+  "Bollywood runs in your veins.",
+  "Filmfare-worthy knowledge.",
+  "You could write for a gossip column.",
+];
+
+const TAUNTS_BY_CAT = { lotr: TAUNTS_LOTR, hp: TAUNTS_HP, bolly: TAUNTS_BOLLY };
+const PRAISES_BY_CAT = { lotr: PRAISES_LOTR, hp: PRAISES_HP, bolly: PRAISES_BOLLY };
+
+const CAT_LABELS = { lotr: "Middle-earth", hp: "Wizarding World", bolly: "Bollywood" };
+const CAT_CSS    = { lotr: "subj-lotr",    hp: "subj-hp",        bolly: "subj-bolly" };
+const CAT_DOT    = { lotr: "dot-lotr",     hp: "dot-hp",         bolly: "dot-bolly" };
 
 function getScoreMsg(score) {
-  if (score >= 48) return "Flawless and instant. Suspicious. You cheated, didn't you.";
-  if (score >= 38) return "Sharp as Andúril. A Ranger of the North at full speed.";
-  if (score >= 26) return "Respectable. You'd survive the Council, possibly the Mines.";
-  if (score >= 14) return "You've seen the movies. Once. At a friend's house. While on your phone.";
-  if (score >=  5) return "Bilbo's cousin's gardener could do better. Drunk.";
-  return "Zero. Even the Mouth of Sauron pities you. Go re-watch the extended editions.";
+  if (score >= 65) return "Flawless and instant. Suspicious. You cheated, didn't you.";
+  if (score >= 52) return "Sharp across all realms. Part Ranger, part Auror, part gossip columnist.";
+  if (score >= 38) return "Solid showing. You know your lore and your filmi drama.";
+  if (score >= 22) return "You've watched some movies. Once. While scrolling your phone.";
+  if (score >=  8) return "Were you even trying, or just mashing buttons?";
+  return "Zero brain cells deployed. Sauron, Voldemort, and Salman Bhai all pity you.";
 }
 const MEDALS = ["✦","✧","✧"];
 const LABELS = ["A","B","C","D"];
-const ROMAN = ["I","II","III","IV","V"];
+const TOTAL_Q = 7;  // 3 LOTR + 3 HP + 1 Bollywood
+const MAX_SCORE = TOTAL_Q * 10;  // 70
 
 const IST_OFFSET_MIN = 330;
 const ROLLOVER_HOUR = 19;
@@ -1154,18 +1253,31 @@ function getDailyQuestions() {
   let s = seed;
   const rng = () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 0x100000000; };
 
-  const picks = [];
-  for (let tier = 1; tier <= 5; tier++) {
-    const bucket = ALL_Q.filter(q => q.diff === tier).map(q => ({ ...q, opts: [...q.opts] }));
+  function pickFromPool(pool, tier) {
+    const bucket = pool.filter(q => q.diff === tier).map(q => ({ ...q, opts: [...q.opts] }));
     for (let i = bucket.length - 1; i > 0; i--) { const j = Math.floor(rng()*(i+1)); [bucket[i],bucket[j]]=[bucket[j],bucket[i]]; }
-    const chosen = bucket[0];
+    return bucket[0];
+  }
+
+  function prepare(chosen) {
     const correct = chosen.opts[chosen.a];
     const opts = [...chosen.opts];
     for (let i = opts.length-1; i > 0; i--) { const j = Math.floor(rng()*(i+1)); [opts[i],opts[j]]=[opts[j],opts[i]]; }
-    const taunt = TAUNTS[Math.floor(rng() * TAUNTS.length)];
-    const praise = PRAISES[Math.floor(rng() * PRAISES.length)];
-    picks.push({ q: chosen.q, opts, a: opts.indexOf(correct), diff: tier, taunt, praise });
+    const taunts = TAUNTS_BY_CAT[chosen.cat];
+    const praises = PRAISES_BY_CAT[chosen.cat];
+    const taunt = taunts[Math.floor(rng() * taunts.length)];
+    const praise = praises[Math.floor(rng() * praises.length)];
+    return { q: chosen.q, opts, a: opts.indexOf(correct), diff: chosen.diff, cat: chosen.cat, taunt, praise };
   }
+
+  const picks = [];
+  // 3 LOTR: easy, medium, hard
+  for (let tier = 1; tier <= 3; tier++) picks.push(prepare(pickFromPool(LOTR_Q, tier)));
+  // 3 HP: easy, medium, hard
+  for (let tier = 1; tier <= 3; tier++) picks.push(prepare(pickFromPool(HP_Q, tier)));
+  // 1 Bollywood (all tier 2)
+  picks.push(prepare(pickFromPool(BOLLY_Q, 2)));
+
   return picks;
 }
 
@@ -1321,8 +1433,8 @@ function miniLandscape() {
 }
 
 function peaksRow(level) {
-  let html = `<span class="peaks-row" aria-label="Difficulty ${level} of 5">`;
-  for (let i = 1; i <= 5; i++) {
+  let html = `<span class="peaks-row" aria-label="Difficulty ${level} of 3">`;
+  for (let i = 1; i <= 3; i++) {
     html += `<svg width="11" height="11" class="${i<=level?'peak-on':'peak-off'}"><use href="#i-peak"/></svg>`;
   }
   return html + `</span>`;
@@ -1435,7 +1547,7 @@ function recordAndAdvance(selectedIdx, correct, elapsed) {
   const newQScores   = [...state.questionScores, qScore];
   setState({ selected: selectedIdx, feedback: true, answers: newAnswers, questionScores: newQScores, elapsed: Math.min(elapsed, 10) });
   setTimeout(() => {
-    if (state.qIdx < 4) kickCountdown(state.qIdx + 1);
+    if (state.qIdx < TOTAL_Q - 1) kickCountdown(state.qIdx + 1);
     else finishQuiz(newAnswers, newQScores);
   }, 1800);
 }
@@ -1455,8 +1567,14 @@ function handleTimeout() {
 async function copyResult() {
   const d = new Date();
   const ds = d.toLocaleDateString("en-GB", { day:"numeric", month:"short" });
-  const emojis = state.finalAnswers.map(c => c?"⚔":"☠").join(" ");
-  const text = `❖ The Daily Quest · ${ds}\n${state.playerName}: ${state.myScore}/50\n${emojis}`;
+  // Subject-coded emojis: ⚔/☠ for LOTR, ⚡/💀 for HP, 🎬/💔 for Bolly
+  const catEmoji = { lotr: ["⚔","☠"], hp: ["⚡","💀"], bolly: ["🎬","💔"] };
+  const qs = state.questions;
+  const emojis = state.finalAnswers.map((c,i) => {
+    const pair = catEmoji[qs[i]?.cat] || ["✓","✗"];
+    return c ? pair[0] : pair[1];
+  }).join(" ");
+  const text = `❖ The Daily Quest · ${ds}\n${state.playerName}: ${state.myScore}/${MAX_SCORE}\n${emojis}`;
   try {
     await navigator.clipboard.writeText(text);
     setState({ copied: true });
@@ -1473,7 +1591,7 @@ function render() {
       ${heroBlock()}
       <div class="title-block">
         <h1>The Daily Quest</h1>
-        <p class="sub">Five questions of Middle-earth · ascending in peril<br/>a new quest rises at dusk (7 PM IST)</p>
+        <p class="sub">Seven questions across three realms · a new quest at dusk (7 PM IST)</p>
       </div>
       ${flourish()}
       <div class="card">
@@ -1510,7 +1628,7 @@ function render() {
       ${heroBlock()}
       <div class="title-block">
         <h1>The Daily Quest</h1>
-        <p class="sub">Five questions of Middle-earth · ascending in peril<br/>a new quest rises at dusk (7 PM IST)</p>
+        <p class="sub">Seven questions across three realms · a new quest at dusk (7 PM IST)</p>
       </div>
       ${flourish()}
       <div class="card" style="text-align:center;">
@@ -1529,11 +1647,14 @@ function render() {
   }
 
   if (s.screen === "quiz") {
-    const tiles = [0,1,2,3,4].map(i => {
+    // Order: LOTR 1-3, HP 4-6, Bolly 7
+    const tileCats = s.questions.map(q => q.cat);
+    const tiles = Array.from({length: TOTAL_Q}, (_,i) => {
       let cls = "rune-tile";
       if (i < s.qIdx) cls += " active";
       else if (i === s.qIdx) cls += " active current";
-      return `<div class="${cls}">${ROMAN[i]}</div>`;
+      const dot = `<span class="rune-dot ${CAT_DOT[tileCats[i]] || ''}"></span>`;
+      return `<div class="${cls}">${i+1}${dot}</div>`;
     }).join("");
 
     // ── Countdown overlay ──────────────────────────────────────────────────
@@ -1588,9 +1709,10 @@ function render() {
         <div class="timer-bar-wrap"><div class="timer-bar" style="width:${pct}%;background-color:${tClr}"></div></div>
         <div class="timer-label" style="color:${tClr}">${s.feedback ? (s.selected === -1 ? 'TIME\'S UP' : s.elapsed.toFixed(1) + 's') : s.elapsed.toFixed(1) + 's'}</div>
         <div class="q-tag">
-          <span>Trial ${ROMAN[s.qIdx]} of V</span>
+          <span>Quest ${s.qIdx + 1} of ${TOTAL_Q}</span>
           ${peaksRow(q.diff)}
         </div>
+        <span class="q-subject ${CAT_CSS[q.cat] || ''}">${CAT_LABELS[q.cat] || ''}</span>
         <div class="q-text">${escHtml(q.q)}</div>
       </div>
       <div class="opts">${opts}</div>
@@ -1607,16 +1729,20 @@ function render() {
     // photo banner that varies by score outcome
     const sc = s.myScore ?? 0;
     let bannerTier = "tier-mid", bannerCap = "Wandering still…";
-    if (sc >= 4) { bannerTier = "tier-high"; bannerCap = "The Argonath honours you"; }
-    else if (sc <= 1) { bannerTier = "tier-low"; bannerCap = "Shadow takes the unworthy"; }
+    if (sc >= 50) { bannerTier = "tier-high"; bannerCap = "The Argonath honours you"; }
+    else if (sc <= 15) { bannerTier = "tier-low"; bannerCap = "Shadow takes the unworthy"; }
     const doneBanner = `<div class="done-banner ${bannerTier}" aria-hidden="true">
         <div class="done-banner-caption">${bannerCap}</div>
       </div>`;
     const emojiRow = s.finalAnswers.length>0
-      ? `<div class="emojis">${s.finalAnswers.map(c=>`
-          <span class="emoji-cell ${c?'win':'loss'}">
+      ? `<div class="emojis">${s.finalAnswers.map((c,i)=>{
+          const cat = s.questions[i]?.cat || 'lotr';
+          const dotCls = CAT_DOT[cat] || '';
+          return `<span class="emoji-cell ${c?'win':'loss'}" style="position:relative">
             <svg width="22" height="22"><use href="#${c?'i-sword':'i-skull'}"/></svg>
-          </span>`).join("")}</div>` : "";
+            <span class="rune-dot ${dotCls}" style="bottom:-2px"></span>
+          </span>`;
+        }).join("")}</div>` : "";
 
     let lbHtml;
     if (s.syncing || s.leaderboard===null) {
@@ -1627,7 +1753,7 @@ function render() {
       lbHtml = s.leaderboard.map(({name,score},i)=>{
         const rank = i < 3
           ? `<span class="lb-rank medal">${MEDALS[i]}</span>`
-          : `<span class="lb-rank">${ROMAN[i] || (i+1)}</span>`;
+          : `<span class="lb-rank">${i+1}</span>`;
         return `
         <div class="lb-row ${name===s.playerName?'me':''}">
           <div class="lb-left">
@@ -1635,7 +1761,7 @@ function render() {
             <span class="lb-name">${escHtml(name)}</span>
             ${name===s.playerName?`<span class="lb-you">— you</span>`:""}
           </div>
-          <span class="lb-score ${score===50?'perfect':''}">${score} <span style="opacity:0.4">/</span> 50</span>
+          <span class="lb-score ${score>=MAX_SCORE?'perfect':''}">${score} <span style="opacity:0.4">/</span> ${MAX_SCORE}</span>
         </div>`;
       }).join("");
     }
@@ -1649,8 +1775,8 @@ function render() {
         <div class="score-frame">
           <svg viewBox="0 0 220 220"><use href="#i-scoreframe"/></svg>
           <div class="score-stack">
-            <span class="score-big">${s.myScore}</span><span class="score-denom">/50</span>
-            <span class="score-of">pts · out of 50</span>
+            <span class="score-big">${s.myScore}</span><span class="score-denom">/${MAX_SCORE}</span>
+            <span class="score-of">pts · out of ${MAX_SCORE}</span>
           </div>
         </div>
         <div class="score-msg">${escHtml(msg)}</div>
