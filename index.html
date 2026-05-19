@@ -774,6 +774,59 @@ input[type=text]:focus {
   z-index: 2;
 }
 
+/* ─── Other player's answer pop-up during feedback ─── */
+.other-answer {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(138,109,43,0.45);
+  background: linear-gradient(180deg, rgba(20,15,9,0.92), rgba(14,10,6,0.95));
+  text-align: center;
+  animation: otherPop 0.35s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+}
+.other-answer::before {
+  content: "";
+  position: absolute; top: -1px; left: 12px; right: 12px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.other-answer-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--parchment-faint);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+.other-answer-who {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--gold-bright);
+  text-transform: uppercase;
+  margin-right: 8px;
+}
+.other-answer-text {
+  font-family: 'IM Fell English', serif;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.other-answer-text.right { color: var(--forest-glow); }
+.other-answer-text.wrong { color: var(--crimson-glow); }
+.other-answer-text.timeout { color: var(--parchment-dim); font-style: italic; }
+.other-answer-meta {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--gold-deep);
+  margin-top: 6px;
+}
+@keyframes otherPop {
+  0%   { transform: scale(0.92) translateY(8px); opacity: 0; }
+  100% { transform: scale(1) translateY(0);     opacity: 1; }
+}
+
 /* ─── Question review on done screen ─── */
 .review-q {
   padding: 14px 0;
@@ -1498,15 +1551,31 @@ function findMissedDay(record, name) {
   return missed.length > 0 ? missed[0] : null;
 }
 
-function launchQuiz(dateKey) {
+function launchQuiz(dateKey, otherInfo) {
   const dk = dateKey || getDateKey();
   Object.assign(state, { screen: 'quiz', quizDateKey: dk,
     questions: getDailyQuestions(dk),
     answers: [], finalAnswers: [], questionScores: [],
     questionSelections: [], questionTimes: [],
     selected: null, feedback: false, elapsed: 0,
-    countdown: null, timeStart: null, timerInterval: null });
+    countdown: null, timeStart: null, timerInterval: null,
+    otherName: otherInfo?.name || null,
+    otherDetails: otherInfo?.details || null,
+    otherScore: otherInfo?.score ?? null });
   kickCountdown(0);
+}
+
+// Extract the other player's data for a given day from the bin record
+function extractOtherInfo(record, myName, dk) {
+  const day = record?.scores?.[dk];
+  if (!day) return null;
+  for (const otherName of PLAYERS) {
+    if (otherName === myName) continue;
+    if (day[otherName] !== undefined) {
+      return { name: otherName, score: pScore(day[otherName]), details: pDetails(day[otherName]) };
+    }
+  }
+  return null;
 }
 
 async function handleStart(name) {
@@ -1521,7 +1590,7 @@ async function handleStart(name) {
     // 1. Check for missed days — serve oldest missed quiz first
     const missedDk = findMissedDay(record, name);
     if (missedDk) {
-      launchQuiz(missedDk);
+      launchQuiz(missedDk, extractOtherInfo(record, name, missedDk));
       return;
     }
 
@@ -1538,7 +1607,7 @@ async function handleStart(name) {
     const prevHasAny = Object.keys(prev).length > 0;
     const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
     if (prevComplete) {
-      launchQuiz();   // today's quiz
+      launchQuiz(dk, extractOtherInfo(record, name, dk));   // today's quiz
     } else {
       const missing = PLAYERS.find(p => prev[p] === undefined);
       setState({ screen: "locked", waitingFor: missing });
@@ -1623,7 +1692,7 @@ async function finishQuiz(answers, qScores) {
       setState({ leaderboard: buildLb(dayScores), syncing: false });
       setTimeout(() => {
         const nextDk = nextMissed || todayDk;
-        launchQuiz(nextDk);
+        launchQuiz(nextDk, extractOtherInfo(updated, state.playerName, nextDk));
       }, 3500);
     } else {
       const showDk = quizDk;
@@ -1645,10 +1714,13 @@ function recordAndAdvance(selectedIdx, correct, elapsed) {
   const newTimes      = [...(state.questionTimes || []), Math.min(elapsed, 10)];
   setState({ selected: selectedIdx, feedback: true, answers: newAnswers, questionScores: newQScores,
     questionSelections: newSelections, questionTimes: newTimes, elapsed: Math.min(elapsed, 10) });
+  // Longer dwell when there's an other-player answer to read
+  const hasOther = state.otherName && state.otherDetails && state.otherDetails[state.qIdx];
+  const dwellMs = hasOther ? 3200 : 1800;
   setTimeout(() => {
     if (state.qIdx < TOTAL_Q - 1) kickCountdown(state.qIdx + 1);
     else finishQuiz(newAnswers, newQScores);
-  }, 1800);
+  }, dwellMs);
 }
 
 function handleAnswer(idx) {
@@ -1809,6 +1881,36 @@ function render() {
       : "";
     const runningPts = s.questionScores.reduce((a,b) => a+b, 0);
 
+    // ── Other player's answer (shown during feedback only) ──────────────
+    let otherAnswerBlock = "";
+    if (s.feedback && s.otherName && s.otherDetails && s.otherDetails[s.qIdx]) {
+      const od = s.otherDetails[s.qIdx];
+      let inner;
+      if (od.sel === -1) {
+        inner = `<span class="other-answer-text timeout">⌛ timed out</span>
+                 <span class="other-answer-meta">+0 pts</span>`;
+      } else {
+        const picked = q.opts[od.sel] || '?';
+        const cls = od.ok ? 'right' : 'wrong';
+        const icon = od.ok ? '✓' : '✗';
+        const meta = od.ok
+          ? `+${od.pts} pts · ${od.t}s`
+          : `+0 pts · ${od.t}s`;
+        inner = `<span class="other-answer-text ${cls}">${icon} ${escHtml(picked)}</span>
+                 <span class="other-answer-meta">${meta}</span>`;
+      }
+      otherAnswerBlock = `<div class="other-answer">
+        <span class="other-answer-label">${escHtml(s.otherName)} answered</span>
+        ${inner}
+      </div>`;
+    } else if (s.feedback && s.otherName && !s.otherDetails) {
+      // Other has played (legacy, no per-question breakdown)
+      otherAnswerBlock = `<div class="other-answer">
+        <span class="other-answer-label">${escHtml(s.otherName)} played this quest</span>
+        <span class="other-answer-text timeout">no answer breakdown available</span>
+      </div>`;
+    }
+
     app.innerHTML = `
       ${miniLandscape()}
       ${catchupBanner}
@@ -1827,6 +1929,7 @@ function render() {
       <div class="opts">${opts}</div>
       ${ptsFlash}
       ${snarkLine}
+      ${otherAnswerBlock}
       <p class="tally"><span class="tally-sword">⚔</span><span class="tally-num">${runningPts}</span> &nbsp;pts so far</p>`;
     document.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => handleAnswer(+b.dataset.i)));
     return;
@@ -1904,47 +2007,6 @@ function render() {
         })()}
         ${s.finalAnswers.length>0?`<button class="copy-btn" id="cb">${s.copied?"✓ Copied to share":"Copy your tale"}</button>`:""}
       </div>
-      ${(() => {
-        // ── Question-by-question review ──
-        const reviewDk = s.quizDateKey || getDateKey();
-        const qs = getDailyQuestions(reviewDk);
-        const me = s.leaderboard?.find(e => e.name === s.playerName);
-        const other = s.leaderboard?.find(e => e.name !== s.playerName);
-        const myD = me?.details || null;
-        const otherD = other?.details || null;
-        if (!qs.length) return '';
-        const rows = qs.map((q, i) => {
-          function playerLine(label, d, entry) {
-            // Three cases: (a) no entry → hasn't played, (b) entry but no details → legacy total only, (c) full details
-            if (!entry) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">hasn't played yet</span></div>`;
-            if (!d || !d[i]) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">played · ${entry.score} pts · no breakdown</span></div>`;
-            const di = d[i];
-            if (di.sel === -1) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">⌛ timed out</span></div>`;
-            const picked = q.opts[di.sel] || '?';
-            const cls = di.ok ? 'review-right' : 'review-wrong';
-            const icon = di.ok ? '✓' : '✗';
-            const pts = di.pts > 0 ? `<span class="review-pts">+${di.pts} (${di.t}s)</span>` : `<span class="review-pts" style="color:var(--crimson-glow)">+0</span>`;
-            return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="${cls}">${icon} ${escHtml(picked)}</span> ${pts}</div>`;
-          }
-          const correctAns = q.opts[q.a];
-          const catBadge = `<span class="q-subject ${CAT_CSS[q.cat]}" style="margin:0;font-size:7px;padding:2px 5px">${CAT_LABELS[q.cat]}</span>`;
-          return `<div class="review-q">
-            <div class="review-q-head">
-              <span class="review-q-num">${i+1}.</span>
-              ${catBadge}
-              <span class="review-q-text">${escHtml(q.q)}</span>
-            </div>
-            <div class="review-correct">Answer: ${escHtml(correctAns)}</div>
-            ${playerLine(s.playerName, myD, me)}
-            ${other ? playerLine(other.name, otherD, other) : ''}
-          </div>`;
-        }).join('');
-        return `<div class="card">
-          ${corners()}
-          <div class="lb-title">Quest Breakdown</div>
-          ${rows}
-        </div>`;
-      })()}
       ${(() => {
         const wasCatchup = s.quizDateKey && s.quizDateKey !== getDateKey();
         if (wasCatchup) return `<div class="card" style="text-align:center">
