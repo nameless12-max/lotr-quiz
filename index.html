@@ -1458,9 +1458,12 @@ async function handleStart(name) {
     } else {
       // Check if both players finished yesterday before unlocking today
       // (skip the gate on day 1 — no previous scores at all)
+      // If YOU are the one who missed yesterday, let yourself through —
+      // you can't go back in time, so only block the other player.
       const prevHasAny = Object.keys(prev).length > 0;
       const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
-      if (prevComplete) {
+      const iAmTheMissing = prevHasAny && prev[name] === undefined;
+      if (prevComplete || iAmTheMissing) {
         // reset quiz fields then kick the countdown
       Object.assign(state, { screen: 'quiz', questions: getDailyQuestions(),
         answers: [], finalAnswers: [], questionScores: [],
