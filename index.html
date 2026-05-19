@@ -774,6 +774,42 @@ input[type=text]:focus {
   z-index: 2;
 }
 
+/* ─── Question review on done screen ─── */
+.review-q {
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(138,109,43,0.18);
+}
+.review-q:last-child { border-bottom: none; }
+.review-q-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.review-q-num {
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600;
+  color: var(--gold); min-width: 18px;
+}
+.review-q-text {
+  font-family: 'IM Fell English', serif; font-size: 14px;
+  color: var(--parchment); line-height: 1.4; flex: 1;
+}
+.review-answer {
+  font-family: 'IM Fell English', serif; font-size: 13px;
+  color: var(--parchment-dim); line-height: 1.4;
+  padding: 4px 0 2px 26px;
+}
+.review-correct { color: var(--parchment-dim); font-size: 12px; padding: 2px 0 0 26px; font-style: italic; }
+.review-player {
+  display: inline-block; min-width: 62px;
+  font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.15em; text-transform: uppercase;
+}
+.review-right { color: var(--forest-glow); }
+.review-wrong { color: var(--crimson-glow); }
+.review-timeout { color: var(--parchment-faint); font-style: italic; }
+.review-pts {
+  font-family: 'Cinzel', serif; font-size: 10px;
+  color: var(--gold); margin-left: 6px;
+}
+
 /* ─── Subject badge on question card ─── */
 .q-subject {
   display: inline-block;
@@ -1246,8 +1282,8 @@ function getPrevDateKey() {
 
 const PLAYERS = ["Apurve", "Prerna"]; // the two players — hardcoded
 
-function getDailyQuestions() {
-  const dk = getDateKey();
+function getDailyQuestions(overrideDk) {
+  const dk = overrideDk || getDateKey();
   let seed = 0;
   for (let i = 0; i < dk.length; i++) seed = (seed * 31 + dk.charCodeAt(i)) >>> 0;
   let s = seed;
@@ -1287,12 +1323,16 @@ async function readBin() {
   return (await res.json()).record;
 }
 
-async function saveScore(name, score) {
+// Backward compat: old format was just a number, new format is {score, details}
+function pScore(entry) { return typeof entry === 'number' ? entry : entry?.score ?? 0; }
+function pDetails(entry) { return typeof entry === 'object' && entry !== null ? entry.details : null; }
+
+async function saveScore(name, scoreData, overrideDk) {
   const record = await readBin();
-  const dk = getDateKey();
+  const dk = overrideDk || getDateKey();
   if (!record.scores) record.scores = {};
   if (!record.scores[dk]) record.scores[dk] = {};
-  record.scores[dk][name] = score;
+  record.scores[dk][name] = scoreData;  // now an object {score, details}
   const res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json", "X-Master-Key": MASTER_KEY },
@@ -1308,6 +1348,7 @@ let state = {
   screen: "name",
   playerName: "",
   waitingFor: "",
+  quizDateKey: null,           // which day's quiz we're playing (null = today)
   questions: getDailyQuestions(),
   qIdx: 0, answers: [], finalAnswers: [],
   questionScores: [],          // per-question pts (0-10 each), total = myScore
@@ -1440,6 +1481,34 @@ function peaksRow(level) {
   return html + `</span>`;
 }
 
+// Find the oldest dateKey where the other player played but this player didn't.
+// Returns that dateKey, or null if fully caught up.
+function findMissedDay(record, name) {
+  if (!record.scores) return null;
+  const todayDk = getDateKey();
+  const missed = Object.keys(record.scores)
+    .filter(dk => dk !== todayDk)                              // past days only
+    .filter(dk => {
+      const day = record.scores[dk];
+      const otherPlayed = PLAYERS.some(p => p !== name && day[p] !== undefined);
+      const iMissed = day[name] === undefined;
+      return otherPlayed && iMissed;
+    })
+    .sort();  // chronological (YYYY-MM-DD sorts naturally)
+  return missed.length > 0 ? missed[0] : null;
+}
+
+function launchQuiz(dateKey) {
+  const dk = dateKey || getDateKey();
+  Object.assign(state, { screen: 'quiz', quizDateKey: dk,
+    questions: getDailyQuestions(dk),
+    answers: [], finalAnswers: [], questionScores: [],
+    questionSelections: [], questionTimes: [],
+    selected: null, feedback: false, elapsed: 0,
+    countdown: null, timeStart: null, timerInterval: null });
+  kickCountdown(0);
+}
+
 async function handleStart(name) {
   if (!name) return;
   localStorage.setItem(PLAYER_KEY, name);   // remember forever
@@ -1447,34 +1516,32 @@ async function handleStart(name) {
   try {
     const record = await readBin();
     const dk     = getDateKey();
-    const prevDk = getPrevDateKey();
-    const today  = record.scores?.[dk]     || {};
-    const prev   = record.scores?.[prevDk] || {};
+    const today  = record.scores?.[dk] || {};
 
+    // 1. Check for missed days — serve oldest missed quiz first
+    const missedDk = findMissedDay(record, name);
+    if (missedDk) {
+      launchQuiz(missedDk);
+      return;
+    }
+
+    // 2. Already played today — show results
     if (today[name] !== undefined) {
-      // Already played today — go straight to results
-      const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
-      setState({ myScore: today[name], leaderboard: lb, screen: "done" });
+      const lb = Object.entries(today).map(([nm,entry])=>({name:nm,score:pScore(entry),details:pDetails(entry)})).sort((a,b)=>b.score-a.score);
+      setState({ myScore: pScore(today[name]), leaderboard: lb, screen: "done", quizDateKey: dk });
+      return;
+    }
+
+    // 3. Check if the OTHER player finished yesterday (day-lock gate)
+    const prevDk = getPrevDateKey();
+    const prev   = record.scores?.[prevDk] || {};
+    const prevHasAny = Object.keys(prev).length > 0;
+    const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
+    if (prevComplete) {
+      launchQuiz();   // today's quiz
     } else {
-      // Check if both players finished yesterday before unlocking today
-      // (skip the gate on day 1 — no previous scores at all)
-      // If YOU are the one who missed yesterday, let yourself through —
-      // you can't go back in time, so only block the other player.
-      const prevHasAny = Object.keys(prev).length > 0;
-      const prevComplete = !prevHasAny || PLAYERS.every(p => prev[p] !== undefined);
-      const iAmTheMissing = prevHasAny && prev[name] === undefined;
-      if (prevComplete || iAmTheMissing) {
-        // reset quiz fields then kick the countdown
-      Object.assign(state, { screen: 'quiz', questions: getDailyQuestions(),
-        answers: [], finalAnswers: [], questionScores: [],
-        selected: null, feedback: false, elapsed: 0,
-        countdown: null, timeStart: null, timerInterval: null });
-      kickCountdown(0);
-      } else {
-        // Find who hasn't played yet
-        const missing = PLAYERS.find(p => prev[p] === undefined);
-        setState({ screen: "locked", waitingFor: missing });
-      }
+      const missing = PLAYERS.find(p => prev[p] === undefined);
+      setState({ screen: "locked", waitingFor: missing });
     }
   } catch(e) {
     setState({ err: "The palantír is clouded — check your connection.", screen: "name" });
@@ -1530,13 +1597,39 @@ function kickCountdown(nextIdx) {
 
 async function finishQuiz(answers, qScores) {
   const score = qScores.reduce((a, b) => a + b, 0);
+  const quizDk = state.quizDateKey || getDateKey();
+  // Build per-question detail array
+  const details = state.questions.map((q, i) => ({
+    sel: state.questionSelections?.[i] ?? -1,   // which option index picked (-1 = timeout)
+    ok: answers[i],
+    t: +(state.questionTimes?.[i] ?? 10).toFixed(1),
+    pts: qScores[i],
+    cat: q.cat
+  }));
+  const scoreData = { score, details };
   setState({ myScore: score, finalAnswers: answers, screen: 'done', syncing: true });
   try {
-    const updated = await saveScore(state.playerName, score);
-    const dk = getDateKey();
-    const today = updated.scores?.[dk] || {};
-    const lb = Object.entries(today).map(([nm,sc])=>({name:nm,score:sc})).sort((a,b)=>b.score-a.score);
-    setState({ leaderboard: lb, syncing: false });
+    const updated = await saveScore(state.playerName, scoreData, quizDk);
+    // Check if there are more missed days to catch up on
+    const nextMissed = findMissedDay(updated, state.playerName);
+    const todayDk = getDateKey();
+    const todayScores = updated.scores?.[todayDk] || {};
+    const stillNeedToday = todayScores[state.playerName] === undefined;
+    function buildLb(dayScores) {
+      return Object.entries(dayScores).map(([nm,entry])=>({name:nm,score:pScore(entry),details:pDetails(entry)})).sort((a,b)=>b.score-a.score);
+    }
+    if (nextMissed || (quizDk !== todayDk && stillNeedToday)) {
+      const dayScores = updated.scores?.[quizDk] || {};
+      setState({ leaderboard: buildLb(dayScores), syncing: false });
+      setTimeout(() => {
+        const nextDk = nextMissed || todayDk;
+        launchQuiz(nextDk);
+      }, 3500);
+    } else {
+      const showDk = quizDk;
+      const dayScores = updated.scores?.[showDk] || {};
+      setState({ leaderboard: buildLb(dayScores), syncing: false });
+    }
   } catch(e) {
     setState({ syncing: false, err: "Score recorded, but the chronicle failed to sync." });
   }
@@ -1548,7 +1641,10 @@ function recordAndAdvance(selectedIdx, correct, elapsed) {
   const qScore = correct ? Math.max(1, 10 - Math.floor(elapsed)) : 0;
   const newAnswers   = [...state.answers, correct];
   const newQScores   = [...state.questionScores, qScore];
-  setState({ selected: selectedIdx, feedback: true, answers: newAnswers, questionScores: newQScores, elapsed: Math.min(elapsed, 10) });
+  const newSelections = [...(state.questionSelections || []), selectedIdx];
+  const newTimes      = [...(state.questionTimes || []), Math.min(elapsed, 10)];
+  setState({ selected: selectedIdx, feedback: true, answers: newAnswers, questionScores: newQScores,
+    questionSelections: newSelections, questionTimes: newTimes, elapsed: Math.min(elapsed, 10) });
   setTimeout(() => {
     if (state.qIdx < TOTAL_Q - 1) kickCountdown(state.qIdx + 1);
     else finishQuiz(newAnswers, newQScores);
@@ -1660,10 +1756,19 @@ function render() {
       return `<div class="${cls}">${i+1}${dot}</div>`;
     }).join("");
 
+    // Catchup banner when playing a missed day
+    const isCatchup = s.quizDateKey && s.quizDateKey !== getDateKey();
+    const catchupBanner = isCatchup
+      ? `<div style="text-align:center; margin-bottom:14px; padding:8px 14px; border:1px solid rgba(201,161,74,0.35); background:rgba(201,161,74,0.06);">
+           <span style="font-family:'Cinzel',serif; font-size:10px; letter-spacing:0.22em; color:var(--gold); text-transform:uppercase;">Catching up · ${s.quizDateKey}</span>
+         </div>`
+      : '';
+
     // ── Countdown overlay ──────────────────────────────────────────────────
     if (s.countdown !== null) {
       app.innerHTML = `
         ${miniLandscape()}
+        ${catchupBanner}
         <div class="prog">${tiles}</div>
         <div class="countdown-frame">
           <div class="countdown-num ${s.countdown === 'GO' ? 'go' : ''}">${s.countdown}</div>
@@ -1706,6 +1811,7 @@ function render() {
 
     app.innerHTML = `
       ${miniLandscape()}
+      ${catchupBanner}
       <div class="prog">${tiles}</div>
       <div class="card">
         ${corners()}
@@ -1728,7 +1834,9 @@ function render() {
 
   if (s.screen === "done") {
     const msg = getScoreMsg(s.myScore ?? 0);
-    const dateStr = new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+    // Show the quiz date (might be a catchup day, not today)
+    const quizDate = s.quizDateKey ? new Date(s.quizDateKey + 'T12:00:00') : new Date();
+    const dateStr = quizDate.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
     // photo banner that varies by score outcome
     const sc = s.myScore ?? 0;
     let bannerTier = "tier-mid", bannerCap = "Wandering still…";
@@ -1796,16 +1904,65 @@ function render() {
         })()}
         ${s.finalAnswers.length>0?`<button class="copy-btn" id="cb">${s.copied?"✓ Copied to share":"Copy your tale"}</button>`:""}
       </div>
-      <div class="card">
-        ${corners()}
-        <div class="lb-title">Today's Chronicle</div>
-        ${lbHtml}
-        ${s.err?`<p class="err" style="margin-top:10px">${escHtml(s.err)}</p>`:""}
-      </div>
-      <p class="footer">
-        A new quest rises with the dusk.<br/>
-        <span class="small-flourish"><svg width="80" height="14"><use href="#i-flourish"/></svg></span>
-      </p>
+      ${(() => {
+        // ── Question-by-question review ──
+        const reviewDk = s.quizDateKey || getDateKey();
+        const qs = getDailyQuestions(reviewDk);
+        const me = s.leaderboard?.find(e => e.name === s.playerName);
+        const other = s.leaderboard?.find(e => e.name !== s.playerName);
+        const myD = me?.details || null;
+        const otherD = other?.details || null;
+        if (!qs.length) return '';
+        const rows = qs.map((q, i) => {
+          function playerLine(label, d, entry) {
+            // Three cases: (a) no entry → hasn't played, (b) entry but no details → legacy total only, (c) full details
+            if (!entry) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">hasn't played yet</span></div>`;
+            if (!d || !d[i]) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">played · ${entry.score} pts · no breakdown</span></div>`;
+            const di = d[i];
+            if (di.sel === -1) return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="review-timeout">⌛ timed out</span></div>`;
+            const picked = q.opts[di.sel] || '?';
+            const cls = di.ok ? 'review-right' : 'review-wrong';
+            const icon = di.ok ? '✓' : '✗';
+            const pts = di.pts > 0 ? `<span class="review-pts">+${di.pts} (${di.t}s)</span>` : `<span class="review-pts" style="color:var(--crimson-glow)">+0</span>`;
+            return `<div class="review-answer"><span class="review-player">${escHtml(label)}</span> <span class="${cls}">${icon} ${escHtml(picked)}</span> ${pts}</div>`;
+          }
+          const correctAns = q.opts[q.a];
+          const catBadge = `<span class="q-subject ${CAT_CSS[q.cat]}" style="margin:0;font-size:7px;padding:2px 5px">${CAT_LABELS[q.cat]}</span>`;
+          return `<div class="review-q">
+            <div class="review-q-head">
+              <span class="review-q-num">${i+1}.</span>
+              ${catBadge}
+              <span class="review-q-text">${escHtml(q.q)}</span>
+            </div>
+            <div class="review-correct">Answer: ${escHtml(correctAns)}</div>
+            ${playerLine(s.playerName, myD, me)}
+            ${other ? playerLine(other.name, otherD, other) : ''}
+          </div>`;
+        }).join('');
+        return `<div class="card">
+          ${corners()}
+          <div class="lb-title">Quest Breakdown</div>
+          ${rows}
+        </div>`;
+      })()}
+      ${(() => {
+        const wasCatchup = s.quizDateKey && s.quizDateKey !== getDateKey();
+        if (wasCatchup) return `<div class="card" style="text-align:center">
+          ${corners()}
+          <p class="center-note" style="color:var(--gold)">Next quest loading…</p>
+          <p class="hint">Catching up on missed days</p>
+        </div>`;
+        return `<div class="card">
+          ${corners()}
+          <div class="lb-title">Today's Chronicle</div>
+          ${lbHtml}
+          ${s.err?`<p class="err" style="margin-top:10px">${escHtml(s.err)}</p>`:""}
+        </div>
+        <p class="footer">
+          A new quest rises with the dusk.<br/>
+          <span class="small-flourish"><svg width="80" height="14"><use href="#i-flourish"/></svg></span>
+        </p>`;
+      })()}
 `;
     const cb = document.getElementById("cb");
     if (cb) cb.addEventListener("click", copyResult);
