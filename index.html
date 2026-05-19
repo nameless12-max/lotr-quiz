@@ -774,64 +774,76 @@ input[type=text]:focus {
   z-index: 2;
 }
 
-/* ─── Two-column scoreboard (Today | Overall) ─── */
-.scoreboards {
-  display: flex; gap: 14px; margin-bottom: 4px;
+/* ─── Unified scoreboard (one row per player, two score cells) ─── */
+.sb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: 4px;
 }
-.sb-col { flex: 1; min-width: 0; }
-.sb-col-title {
-  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+.sb-th {
+  font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
   color: var(--gold); letter-spacing: 0.26em; text-transform: uppercase;
-  text-align: center; margin-bottom: 12px;
-  padding-bottom: 8px;
+  padding: 0 4px 10px;
   border-bottom: 1px solid rgba(138,109,43,0.35);
+  text-align: right;
 }
-.sb-row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 10px;
-  margin-bottom: 5px;
-  border: 1px solid transparent;
-  font-family: 'IM Fell English', serif;
-  font-size: 14px;
-  border-radius: 1px;
+.sb-th.player { text-align: left; }
+.sb-tr {
+  transition: background 0.2s;
 }
-.sb-row.me {
+.sb-tr.me .sb-td {
   background: linear-gradient(90deg, rgba(201,161,74,0.05), rgba(201,161,74,0.13), rgba(201,161,74,0.05));
-  border-color: rgba(201,161,74,0.4);
+  border-top: 1px solid rgba(201,161,74,0.35);
+  border-bottom: 1px solid rgba(201,161,74,0.35);
 }
-.sb-name {
-  display: flex; align-items: center; gap: 6px;
-  min-width: 0; overflow: hidden;
+.sb-tr.me .sb-td:first-child { border-left: 1px solid rgba(201,161,74,0.35); }
+.sb-tr.me .sb-td:last-child  { border-right: 1px solid rgba(201,161,74,0.35); }
+.sb-td {
+  padding: 12px 8px;
+  border-bottom: 1px solid rgba(138,109,43,0.18);
+  font-family: 'IM Fell English', serif;
+}
+.sb-td.player {
+  font-size: 17px;
+  color: var(--parchment);
+  letter-spacing: 0.02em;
+  display: flex; align-items: center; gap: 8px;
+}
+.sb-td.cell {
+  text-align: right;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 .sb-medal {
-  font-family: 'Cinzel', serif; font-size: 13px;
+  font-family: 'Cinzel', serif; font-size: 14px;
   color: var(--gold-bright);
   text-shadow: 0 0 6px rgba(240,212,137,0.4);
   flex-shrink: 0;
 }
 .sb-medal.dim { color: var(--gold-deep); text-shadow: none; }
 .sb-you-tag {
-  font-family: 'IM Fell English', serif; font-size: 11px;
+  font-family: 'IM Fell English', serif; font-size: 12px;
   color: var(--gold-deep); font-style: italic;
 }
-.sb-score {
+.sb-score-main {
   font-family: 'Cinzel', serif; font-weight: 600;
-  font-size: 14px; color: var(--parchment-2);
-  letter-spacing: 0.04em;
-  white-space: nowrap;
+  font-size: 16px; color: var(--parchment);
+  letter-spacing: 0.05em;
 }
-.sb-score.perfect { color: var(--gold-bright); text-shadow: 0 0 10px rgba(240,212,137,0.4); }
+.sb-score-main.perfect { color: var(--gold-bright); text-shadow: 0 0 10px rgba(240,212,137,0.4); }
+.sb-score-main.muted { color: var(--parchment-faint); font-weight: 400; }
 .sb-meta {
   display: block;
   font-family: 'Cinzel', serif; font-size: 8px;
-  letter-spacing: 0.10em; color: var(--parchment-faint);
-  text-align: right; margin-top: 1px;
+  letter-spacing: 0.12em; color: var(--parchment-faint);
+  margin-top: 2px;
 }
 @media (max-width: 480px) {
-  .scoreboards { gap: 10px; }
-  .sb-row { padding: 7px 8px; font-size: 13px; }
-  .sb-col-title { font-size: 9px; letter-spacing: 0.18em; }
-  .sb-score { font-size: 13px; }
+  .sb-td.player { font-size: 15px; gap: 6px; }
+  .sb-th { font-size: 8px; letter-spacing: 0.18em; padding: 0 3px 8px; }
+  .sb-td { padding: 10px 6px; }
+  .sb-score-main { font-size: 14px; }
 }
 
 /* ─── Minimal per-question breakdown on final done screen ─── */
@@ -2200,48 +2212,62 @@ function render() {
           </span>`;
         }).join("")}</div>` : "";
 
-    // ── 2-column scoreboard: Today | Overall ──
+    // ── Unified scoreboard: one row per player, Today + Overall cells ──
     function renderScoreboards() {
       if (s.syncing || s.leaderboard === null) {
         return `<p class="center-note">Inscribing your name in the chronicle…</p>`;
       }
-      const todayList = s.leaderboard || [];
-      const lifetimeList = (s.lifetime || []).filter(p => p.quests > 0);
+      // Lookup maps so we can join today + lifetime per player
+      const todayMap = {};
+      (s.leaderboard || []).forEach(p => { todayMap[p.name] = p; });
+      const lifetimeMap = {};
+      (s.lifetime || []).forEach(p => { lifetimeMap[p.name] = p; });
 
-      function sbRow(name, scoreLabel, isMe, isTop, perfect, metaLabel) {
-        const medal = isTop ? '✦' : '✧';
-        const medalCls = isTop ? '' : 'dim';
-        return `<div class="sb-row ${isMe?'me':''}">
-          <span class="sb-name">
-            <span class="sb-medal ${medalCls}">${medal}</span>
-            <span>${escHtml(name)}</span>
-            ${isMe ? `<span class="sb-you-tag">— you</span>` : ''}
-          </span>
-          <span>
-            <span class="sb-score ${perfect?'perfect':''}">${scoreLabel}</span>
-            ${metaLabel ? `<span class="sb-meta">${metaLabel}</span>` : ''}
-          </span>
-        </div>`;
+      // Master player list: ranked by lifetime score (then by name as tiebreaker)
+      // Include both PLAYERS even if they have no data, so the board is consistent
+      const players = PLAYERS.map(name => ({
+        name,
+        today: todayMap[name] || null,
+        life:  lifetimeMap[name] || { score: 0, quests: 0, wins: 0 },
+      })).sort((a,b) => b.life.score - a.life.score || a.name.localeCompare(b.name));
+
+      if (players.every(p => !p.today && p.life.quests === 0)) {
+        return `<p class="center-note" style="font-size:13px">No scores yet.</p>`;
       }
 
-      const todayRows = todayList.length
-        ? todayList.map((p, i) => sbRow(p.name, `${p.score} / ${MAX_SCORE}`, p.name === s.playerName, i === 0, p.score >= MAX_SCORE, null)).join('')
-        : `<p class="center-note" style="font-size:13px">No scores yet.</p>`;
+      const rows = players.map((p, i) => {
+        const isMe = p.name === s.playerName;
+        const isTop = i === 0 && p.life.score > 0;
+        const medal = isTop ? '✦' : '✧';
+        const medalCls = isTop ? '' : 'dim';
+        const todayCell = p.today
+          ? `<span class="sb-score-main ${p.today.score>=MAX_SCORE?'perfect':''}">${p.today.score} <span style="opacity:0.4">/</span> ${MAX_SCORE}</span>`
+          : `<span class="sb-score-main muted">—</span>`;
+        const lifeCell = p.life.quests > 0
+          ? `<span class="sb-score-main">${p.life.score} pts</span>
+             <span class="sb-meta">${p.life.quests} quest${p.life.quests===1?'':'s'} · ${p.life.wins} win${p.life.wins===1?'':'s'}</span>`
+          : `<span class="sb-score-main muted">—</span>`;
+        return `<tr class="sb-tr ${isMe?'me':''}">
+          <td class="sb-td player">
+            <span class="sb-medal ${medalCls}">${medal}</span>
+            <span>${escHtml(p.name)}</span>
+            ${isMe ? `<span class="sb-you-tag">— you</span>` : ''}
+          </td>
+          <td class="sb-td cell">${todayCell}</td>
+          <td class="sb-td cell">${lifeCell}</td>
+        </tr>`;
+      }).join('');
 
-      const lifetimeRows = lifetimeList.length
-        ? lifetimeList.map((p, i) => sbRow(p.name, `${p.score} pts`, p.name === s.playerName, i === 0, false, `${p.quests} quest${p.quests===1?'':'s'} · ${p.wins} win${p.wins===1?'':'s'}`)).join('')
-        : `<p class="center-note" style="font-size:13px">Just getting started.</p>`;
-
-      return `<div class="scoreboards">
-        <div class="sb-col">
-          <div class="sb-col-title">Today</div>
-          ${todayRows}
-        </div>
-        <div class="sb-col">
-          <div class="sb-col-title">Overall</div>
-          ${lifetimeRows}
-        </div>
-      </div>`;
+      return `<table class="sb-table">
+        <thead>
+          <tr>
+            <th class="sb-th player">Standings</th>
+            <th class="sb-th">Today</th>
+            <th class="sb-th">Overall</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
     }
 
     app.innerHTML = `
