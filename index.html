@@ -775,45 +775,48 @@ input[type=text]:focus {
 }
 
 /* ─── Unified scoreboard (one row per player, two score cells) ─── */
-.sb-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+.sb-table { margin-bottom: 4px; }
+.sb-head {
+  display: flex; align-items: flex-end;
+  padding: 0 12px 10px;
+  border-bottom: 1px solid rgba(138,109,43,0.35);
   margin-bottom: 4px;
 }
-.sb-th {
+.sb-head-player { flex: 1; min-width: 0; }
+.sb-head-cell {
+  width: 96px;
+  text-align: right;
+  padding-left: 8px;
+}
+.sb-head .label {
   font-family: 'Cinzel', serif; font-size: 9px; font-weight: 600;
   color: var(--gold); letter-spacing: 0.26em; text-transform: uppercase;
-  padding: 0 4px 10px;
-  border-bottom: 1px solid rgba(138,109,43,0.35);
-  text-align: right;
 }
-.sb-th.player { text-align: left; }
-.sb-tr {
+.sb-row {
+  display: flex; align-items: center;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-bottom-color: rgba(138,109,43,0.18);
+  font-family: 'IM Fell English', serif;
   transition: background 0.2s;
 }
-.sb-tr.me .sb-td {
-  background: linear-gradient(90deg, rgba(201,161,74,0.05), rgba(201,161,74,0.13), rgba(201,161,74,0.05));
-  border-top: 1px solid rgba(201,161,74,0.35);
-  border-bottom: 1px solid rgba(201,161,74,0.35);
+.sb-row:last-child { border-bottom-color: transparent; }
+.sb-row.me {
+  background: linear-gradient(90deg, rgba(201,161,74,0.06), rgba(201,161,74,0.13), rgba(201,161,74,0.06));
+  border-color: rgba(201,161,74,0.4);
 }
-.sb-tr.me .sb-td:first-child { border-left: 1px solid rgba(201,161,74,0.35); }
-.sb-tr.me .sb-td:last-child  { border-right: 1px solid rgba(201,161,74,0.35); }
-.sb-td {
-  padding: 12px 8px;
-  border-bottom: 1px solid rgba(138,109,43,0.18);
-  font-family: 'IM Fell English', serif;
-}
-.sb-td.player {
+.sb-row-player {
+  flex: 1; min-width: 0;
   font-size: 17px;
   color: var(--parchment);
   letter-spacing: 0.02em;
   display: flex; align-items: center; gap: 8px;
 }
-.sb-td.cell {
+.sb-row-cell {
+  width: 96px;
   text-align: right;
+  padding-left: 8px;
   white-space: nowrap;
-  vertical-align: middle;
 }
 .sb-medal {
   font-family: 'Cinzel', serif; font-size: 14px;
@@ -840,9 +843,11 @@ input[type=text]:focus {
   margin-top: 2px;
 }
 @media (max-width: 480px) {
-  .sb-td.player { font-size: 15px; gap: 6px; }
-  .sb-th { font-size: 8px; letter-spacing: 0.18em; padding: 0 3px 8px; }
-  .sb-td { padding: 10px 6px; }
+  .sb-row { padding: 10px 8px; }
+  .sb-row-player { font-size: 15px; gap: 6px; }
+  .sb-head { padding: 0 8px 8px; }
+  .sb-head-cell, .sb-row-cell { width: 80px; padding-left: 6px; }
+  .sb-head .label { font-size: 8px; letter-spacing: 0.18em; }
   .sb-score-main { font-size: 14px; }
 }
 
@@ -2247,27 +2252,25 @@ function render() {
           ? `<span class="sb-score-main">${p.life.score} pts</span>
              <span class="sb-meta">${p.life.quests} quest${p.life.quests===1?'':'s'} · ${p.life.wins} win${p.life.wins===1?'':'s'}</span>`
           : `<span class="sb-score-main muted">—</span>`;
-        return `<tr class="sb-tr ${isMe?'me':''}">
-          <td class="sb-td player">
+        return `<div class="sb-row ${isMe?'me':''}">
+          <div class="sb-row-player">
             <span class="sb-medal ${medalCls}">${medal}</span>
             <span>${escHtml(p.name)}</span>
             ${isMe ? `<span class="sb-you-tag">— you</span>` : ''}
-          </td>
-          <td class="sb-td cell">${todayCell}</td>
-          <td class="sb-td cell">${lifeCell}</td>
-        </tr>`;
+          </div>
+          <div class="sb-row-cell">${todayCell}</div>
+          <div class="sb-row-cell">${lifeCell}</div>
+        </div>`;
       }).join('');
 
-      return `<table class="sb-table">
-        <thead>
-          <tr>
-            <th class="sb-th player">Standings</th>
-            <th class="sb-th">Today</th>
-            <th class="sb-th">Overall</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>`;
+      return `<div class="sb-table">
+        <div class="sb-head">
+          <div class="sb-head-player"><span class="label">Standings</span></div>
+          <div class="sb-head-cell"><span class="label">Today</span></div>
+          <div class="sb-head-cell"><span class="label">Overall</span></div>
+        </div>
+        ${rows}
+      </div>`;
     }
 
     app.innerHTML = `
