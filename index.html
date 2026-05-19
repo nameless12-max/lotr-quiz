@@ -774,6 +774,104 @@ input[type=text]:focus {
   z-index: 2;
 }
 
+/* ─── Lifetime standings (mini) ─── */
+.lifetime-box {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid rgba(138,109,43,0.35);
+}
+.lifetime-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--gold);
+  letter-spacing: 0.30em;
+  text-align: center;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+.lifetime-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  font-family: 'IM Fell English', serif;
+  font-size: 15px;
+}
+.lifetime-row.me {
+  background: rgba(201,161,74,0.08);
+  border-color: rgba(201,161,74,0.3);
+}
+.lifetime-left { display: flex; align-items: center; gap: 12px; }
+.lifetime-rank {
+  font-family: 'Cinzel', serif; font-size: 12px;
+  color: var(--gold); min-width: 22px;
+}
+.lifetime-rank.medal { color: var(--gold-bright); text-shadow: 0 0 6px rgba(240,212,137,0.4); }
+.lifetime-meta {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  color: var(--parchment-faint); letter-spacing: 0.10em;
+  margin-left: 6px;
+}
+.lifetime-score {
+  font-family: 'Cinzel', serif; font-weight: 600;
+  font-size: 14px; color: var(--parchment);
+  letter-spacing: 0.05em;
+}
+
+/* ─── Minimal per-question breakdown on final done screen ─── */
+.bd-mini {
+  margin-top: 18px; padding-top: 16px;
+  border-top: 1px solid rgba(138,109,43,0.35);
+}
+.bd-mini-title {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+  color: var(--gold); letter-spacing: 0.30em;
+  text-align: center; margin-bottom: 14px; text-transform: uppercase;
+}
+.bd-row {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(138,109,43,0.18);
+  font-family: 'IM Fell English', serif;
+}
+.bd-row:last-child { border-bottom: none; }
+.bd-num {
+  font-family: 'Cinzel', serif; font-size: 11px;
+  color: var(--gold); min-width: 18px;
+  padding-top: 1px;
+}
+.bd-q {
+  flex: 1;
+  font-size: 13px;
+  color: var(--parchment); line-height: 1.35;
+}
+.bd-q-correct {
+  display: block;
+  font-size: 11px; color: var(--parchment-faint);
+  font-style: italic;
+  margin-top: 2px;
+}
+.bd-marks {
+  display: flex; gap: 6px; flex-shrink: 0;
+  padding-top: 2px;
+}
+.bd-mark {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
+  border: 1px solid #3a2e1a;
+  background: #0c0805;
+  position: relative;
+}
+.bd-mark.ok    { color: var(--forest-glow);  border-color: var(--forest);  background: rgba(74,138,72,0.10); }
+.bd-mark.bad   { color: var(--crimson-glow); border-color: var(--crimson); background: rgba(168,56,40,0.10); }
+.bd-mark.timeout { color: var(--parchment-faint); }
+.bd-mark-tt {
+  position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+  font-family: 'IM Fell English', serif; font-size: 9px;
+  color: var(--parchment-faint); white-space: nowrap;
+}
+
 /* ─── Other player's answer pop-up during feedback ─── */
 .other-answer {
   margin-top: 16px;
@@ -1242,59 +1340,72 @@ const BOLLY_Q = [
   { q: "Which couple's divorce shook Bollywood in 2016–17?", opts: ["Hrithik Roshan & Sussanne Khan","Aamir Khan & Kiran Rao","Farhan Akhtar & Adhuna","Arbaaz Khan & Malaika Arora"], a: 0, diff: 2, cat: "bolly" },
 ];
 
+// ── Snark banks ── Easy to edit: add or swap lines, they auto-rotate daily.
 const TAUNTS_LOTR = [
-  "A child of the Shire would have known that.",
-  "Even an Orc could've guessed better.",
-  "Saruman is laughing somewhere.",
-  "Gollum knows more than you, precious.",
-  "Boromir died for this and you can't even answer it.",
-  "Sauron just smiled. That's bad.",
-  "Even Pippin wouldn't have fumbled that one.",
-  "Mordor called. They want their dignity back.",
+  "Sauron is taking notes. Bad ones.",
+  "Even Pippin called that one.",
+  "Gollum heard. Gollum is laughing.",
+  "Boromir died so you could fail this. Shame.",
+  "A Hobbit toddler outscored you.",
+  "Saruman's clone army has higher IQs.",
+  "Mordor revoked your tour pass.",
+  "Elrond facepalmed in elvish.",
+  "Wormtongue is the smart one now.",
+  "Treebeard would say: this. is. dumb.",
 ];
 const TAUNTS_HP = [
-  "A first-year Muggle-born could do better.",
-  "Even Neville got that right in the books.",
-  "Voldemort didn't die for you to be this clueless.",
-  "Snape would deduct 50 points for that answer.",
-  "Hermione is disappointed. Severely.",
-  "A Squib would outscore you at this rate.",
-  "Even Crabbe and Goyle knew that one.",
-  "The Sorting Hat would put you in detention.",
+  "Snape just docked 50 from your soul.",
+  "Even Trelawney saw that coming. You didn't.",
+  "Hermione is muttering 'honestly'.",
+  "A Crabbe-level performance.",
+  "Hedwig died for nothing.",
+  "Filch is more competent than this.",
+  "The Sorting Hat suggests Squibtown.",
+  "Lockhart would've at least faked it better.",
+  "Dumbledore would not be smiling. Quietly or otherwise.",
+  "Voldemort's nose returned just to laugh.",
 ];
 const TAUNTS_BOLLY = [
-  "Even your relatives' WhatsApp group knows this.",
-  "Did you just arrive from another planet?",
-  "Karan Johar just clutched his pearls.",
-  "Instagram exists, you know.",
-  "Every auto driver in Mumbai could answer that.",
-  "Filmfare called. They're embarrassed for you.",
-  "Even a Bigg Boss elimination is less painful than this.",
-  "Salman Bhai is disappointed.",
+  "Your dadi knows more than this.",
+  "Karan Johar would not invite you to coffee.",
+  "Filmfare just shredded your invite.",
+  "Even Bigg Boss contestants score higher.",
+  "Pinkvilla is embarrassed for you.",
+  "Salman Bhai is shaking his head, slowly.",
+  "Even your maid's WhatsApp group has better intel.",
+  "You've clearly been in a coma since 2007.",
+  "Twinkle Khanna just unfollowed you mentally.",
+  "Arnab is yelling about you on prime time.",
 ];
 const PRAISES_LOTR = [
-  "Well struck, traveller.",
-  "Elrond nods in approval.",
-  "Galadriel saw this coming.",
-  "Gandalf would be proud.",
-  "A true student of the Red Book.",
-  "Not bad for a Halfling.",
+  "Aragorn nods. Briefly.",
+  "Gandalf approves. Quietly.",
+  "You may now enter Lothlórien.",
+  "Sting glows for you.",
+  "Council-of-Elrond material.",
+  "The Eye looked away. You're safe.",
+  "Elrond just added you to the chat.",
+  "Tom Bombadil sings about you.",
 ];
 const PRAISES_HP = [
-  "Outstanding — that's an O on your O.W.L.",
-  "Dumbledore's Army would be proud.",
-  "10 points to your house!",
-  "Hermione-level recall. Impressive.",
-  "The Room of Requirement just opened for you.",
-  "Lumos! Your mind is clearly lit.",
+  "10 points to whichever house you're guessing.",
+  "An 'O' on your O.W.L.",
+  "Hermione raised an eyebrow. High praise.",
+  "Lumos, smart cookie.",
+  "Dumbledore would offer you a sherbet lemon.",
+  "Mad-Eye's other eye looked impressed.",
+  "Hedwig delivered. To you.",
+  "The Room of Requirement opened. Just for showing off.",
 ];
 const PRAISES_BOLLY = [
-  "Full gossip aunty energy. Respect.",
-  "You clearly follow everyone on Instagram.",
-  "Koffee with Karan finalist, honestly.",
-  "Bollywood runs in your veins.",
-  "Filmfare-worthy knowledge.",
-  "You could write for a gossip column.",
+  "Filmfare nominee energy.",
+  "Karan is texting you for a podcast.",
+  "Twinkle Khanna would retweet this.",
+  "You eat Pinkvilla for breakfast.",
+  "Aunty WhatsApp group: tier S.",
+  "You should be in Bigg Boss as the smart one.",
+  "Koffee with Karan — front row, confirmed.",
+  "Diet Sabya can't keep up.",
 ];
 
 const TAUNTS_BY_CAT = { lotr: TAUNTS_LOTR, hp: TAUNTS_HP, bolly: TAUNTS_BOLLY };
@@ -1304,13 +1415,60 @@ const CAT_LABELS = { lotr: "Middle-earth", hp: "Wizarding World", bolly: "Bollyw
 const CAT_CSS    = { lotr: "subj-lotr",    hp: "subj-hp",        bolly: "subj-bolly" };
 const CAT_DOT    = { lotr: "dot-lotr",     hp: "dot-hp",         bolly: "dot-bolly" };
 
-function getScoreMsg(score) {
-  if (score >= 65) return "Flawless and instant. Suspicious. You cheated, didn't you.";
-  if (score >= 52) return "Sharp across all realms. Part Ranger, part Auror, part gossip columnist.";
-  if (score >= 38) return "Solid showing. You know your lore and your filmi drama.";
-  if (score >= 22) return "You've watched some movies. Once. While scrolling your phone.";
-  if (score >=  8) return "Were you even trying, or just mashing buttons?";
-  return "Zero brain cells deployed. Sauron, Voldemort, and Salman Bhai all pity you.";
+// ── End-of-quiz tier messages — multiple per tier, rotate daily ──
+const SCORE_MSGS = {
+  legendary: [   // 65+
+    "Flawless. Suspicious. You're definitely Googling.",
+    "Hermione, Gandalf, and KJo are all jealous.",
+    "Stop. This is rigged. Tell us your secret.",
+    "Even the cheaters are impressed.",
+  ],
+  great: [       // 52-64
+    "Sharp. Part Ranger, part Auror, part gossip aunty.",
+    "Three fandoms feared you today.",
+    "You read books AND scroll Instagram. Balanced.",
+    "Solid. The Sorting Hat is confused but pleased.",
+  ],
+  good: [        // 38-51
+    "Decent. You'd survive the Council. Possibly.",
+    "Mid-tier wizardry with bonus filmi flair.",
+    "You know enough to talk a big game.",
+    "Respectable. Not memorable, but respectable.",
+  ],
+  meh: [         // 22-37
+    "You watched the movies. Once. On 2x speed.",
+    "Vibes-based wizardry. No notes.",
+    "Bare minimum effort, full Bollywood vibes.",
+    "Your aunty knows more than this.",
+  ],
+  bad: [         // 8-21
+    "Were you guessing or just clicking?",
+    "Filch could do better. And Filch can barely walk.",
+    "Did the questions confuse you or the buttons?",
+    "Even Voldemort had goals. You have none.",
+  ],
+  abyss: [       // 0-7
+    "Zero brain cells deployed today.",
+    "Sauron, Voldemort, and Salman Bhai all pity you.",
+    "Did you mean to play Wordle? Because.",
+    "We've witnessed a crime against trivia.",
+  ],
+};
+function _seedFromDk(dk) {
+  let s = 0;
+  for (let i = 0; i < dk.length; i++) s = (s * 31 + dk.charCodeAt(i)) >>> 0;
+  return s;
+}
+function getScoreMsg(score, dk) {
+  const tier =
+    score >= 65 ? 'legendary' :
+    score >= 52 ? 'great'     :
+    score >= 38 ? 'good'      :
+    score >= 22 ? 'meh'       :
+    score >=  8 ? 'bad'       : 'abyss';
+  const pool = SCORE_MSGS[tier];
+  const seed = _seedFromDk(dk || getDateKey());
+  return pool[seed % pool.length];
 }
 const MEDALS = ["✦","✧","✧"];
 const LABELS = ["A","B","C","D"];
@@ -1410,7 +1568,7 @@ let state = {
   timeStart: null,             // Date.now() when current question went live
   elapsed: 0,                  // seconds since question started (updated every 100ms)
   timerInterval: null,         // setInterval id for the tick
-  myScore: null, leaderboard: null,
+  myScore: null, leaderboard: null, lifetime: null, morePending: false,
   syncing: false, err: "", copied: false
 };
 
@@ -1565,6 +1723,30 @@ function launchQuiz(dateKey, otherInfo) {
   kickCountdown(0);
 }
 
+// Compute lifetime totals across ALL days for every player
+function computeLifetime(record) {
+  const totals = {};   // name → { score, quests, wins }
+  for (const p of PLAYERS) totals[p] = { score: 0, quests: 0, wins: 0 };
+  const dks = Object.keys(record?.scores || {});
+  for (const dk of dks) {
+    const day = record.scores[dk];
+    // Per-day winner (for tracking wins)
+    let topScore = -1, topPlayer = null, tied = false;
+    for (const p of Object.keys(day)) {
+      if (!totals[p]) totals[p] = { score: 0, quests: 0, wins: 0 };
+      const sc = pScore(day[p]);
+      totals[p].score += sc;
+      totals[p].quests += 1;
+      if (sc > topScore) { topScore = sc; topPlayer = p; tied = false; }
+      else if (sc === topScore) { tied = true; }
+    }
+    if (topPlayer && !tied) totals[topPlayer].wins += 1;
+  }
+  return Object.entries(totals)
+    .map(([name, t]) => ({ name, ...t }))
+    .sort((a, b) => b.score - a.score);
+}
+
 // Extract the other player's data for a given day from the bin record
 function extractOtherInfo(record, myName, dk) {
   const day = record?.scores?.[dk];
@@ -1597,7 +1779,8 @@ async function handleStart(name) {
     // 2. Already played today — show results
     if (today[name] !== undefined) {
       const lb = Object.entries(today).map(([nm,entry])=>({name:nm,score:pScore(entry),details:pDetails(entry)})).sort((a,b)=>b.score-a.score);
-      setState({ myScore: pScore(today[name]), leaderboard: lb, screen: "done", quizDateKey: dk });
+      const lifetime = computeLifetime(record);
+      setState({ myScore: pScore(today[name]), leaderboard: lb, lifetime, screen: "done", quizDateKey: dk, morePending: false });
       return;
     }
 
@@ -1687,9 +1870,10 @@ async function finishQuiz(answers, qScores) {
     function buildLb(dayScores) {
       return Object.entries(dayScores).map(([nm,entry])=>({name:nm,score:pScore(entry),details:pDetails(entry)})).sort((a,b)=>b.score-a.score);
     }
+    const lifetime = computeLifetime(updated);
     if (nextMissed || (quizDk !== todayDk && stillNeedToday)) {
       const dayScores = updated.scores?.[quizDk] || {};
-      setState({ leaderboard: buildLb(dayScores), syncing: false });
+      setState({ leaderboard: buildLb(dayScores), lifetime, syncing: false, morePending: true });
       setTimeout(() => {
         const nextDk = nextMissed || todayDk;
         launchQuiz(nextDk, extractOtherInfo(updated, state.playerName, nextDk));
@@ -1697,7 +1881,7 @@ async function finishQuiz(answers, qScores) {
     } else {
       const showDk = quizDk;
       const dayScores = updated.scores?.[showDk] || {};
-      setState({ leaderboard: buildLb(dayScores), syncing: false });
+      setState({ leaderboard: buildLb(dayScores), lifetime, syncing: false, morePending: false });
     }
   } catch(e) {
     setState({ syncing: false, err: "Score recorded, but the chronicle failed to sync." });
@@ -1936,7 +2120,7 @@ function render() {
   }
 
   if (s.screen === "done") {
-    const msg = getScoreMsg(s.myScore ?? 0);
+    const msg = getScoreMsg(s.myScore ?? 0, s.quizDateKey);
     // Show the quiz date (might be a catchup day, not today)
     const quizDate = s.quizDateKey ? new Date(s.quizDateKey + 'T12:00:00') : new Date();
     const dateStr = quizDate.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
@@ -2008,16 +2192,81 @@ function render() {
         ${s.finalAnswers.length>0?`<button class="copy-btn" id="cb">${s.copied?"✓ Copied to share":"Copy your tale"}</button>`:""}
       </div>
       ${(() => {
-        const wasCatchup = s.quizDateKey && s.quizDateKey !== getDateKey();
-        if (wasCatchup) return `<div class="card" style="text-align:center">
+        // Intermediate catchup screen — just "next quest loading"
+        if (s.morePending) return `<div class="card" style="text-align:center">
           ${corners()}
           <p class="center-note" style="color:var(--gold)">Next quest loading…</p>
           <p class="hint">Catching up on missed days</p>
         </div>`;
+
+        // ── Lifetime standings (mini, inside the chronicle card) ──
+        let lifetimeHtml = '';
+        if (s.lifetime && s.lifetime.length) {
+          const rows = s.lifetime.filter(p => p.quests > 0).map((p, i) => {
+            const medal = i === 0 ? '✦' : i === 1 ? '✧' : '·';
+            const isMe = p.name === s.playerName;
+            return `<div class="lifetime-row ${isMe?'me':''}">
+              <div class="lifetime-left">
+                <span class="lifetime-rank ${i===0?'medal':''}">${medal}</span>
+                <span>${escHtml(p.name)}${isMe?' — you':''}</span>
+                <span class="lifetime-meta">${p.quests} quest${p.quests===1?'':'s'} · ${p.wins} win${p.wins===1?'':'s'}</span>
+              </div>
+              <span class="lifetime-score">${p.score} pts</span>
+            </div>`;
+          }).join('');
+          if (rows) lifetimeHtml = `<div class="lifetime-box">
+            <div class="lifetime-title">Lifetime Standings</div>
+            ${rows}
+          </div>`;
+        }
+
+        // ── Minimal per-question breakdown (only when BOTH have played today's quiz) ──
+        let breakdownHtml = '';
+        const bothPlayed = s.leaderboard && s.leaderboard.length === 2;
+        if (bothPlayed) {
+          const reviewDk = s.quizDateKey || getDateKey();
+          const qs = getDailyQuestions(reviewDk);
+          const me    = s.leaderboard.find(e => e.name === s.playerName);
+          const other = s.leaderboard.find(e => e.name !== s.playerName);
+          const myD = me?.details || null;
+          const otherD = other?.details || null;
+          if (qs.length) {
+            const rows = qs.map((q, i) => {
+              function mark(label, d) {
+                if (!d || !d[i]) return `<div class="bd-mark timeout" title="no breakdown">?<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
+                const di = d[i];
+                if (di.sel === -1) return `<div class="bd-mark timeout" title="timed out">⌛<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
+                const cls = di.ok ? 'ok' : 'bad';
+                const icon = di.ok ? '✓' : '✗';
+                return `<div class="bd-mark ${cls}" title="${di.ok ? '+' + di.pts + ' pts · ' + di.t + 's' : 'picked: ' + escHtml(q.opts[di.sel] || '?')}">${icon}<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
+              }
+              const meInitial = (me?.name || s.playerName).charAt(0).toUpperCase();
+              const otherInitial = (other?.name || '?').charAt(0).toUpperCase();
+              return `<div class="bd-row">
+                <span class="bd-num">${i+1}.</span>
+                <div class="bd-q">
+                  ${escHtml(q.q)}
+                  <span class="bd-q-correct">→ ${escHtml(q.opts[q.a])}</span>
+                </div>
+                <div class="bd-marks">
+                  ${mark(meInitial, myD)}
+                  ${mark(otherInitial, otherD)}
+                </div>
+              </div>`;
+            }).join('');
+            breakdownHtml = `<div class="bd-mini">
+              <div class="bd-mini-title">Answer-by-Answer</div>
+              ${rows}
+            </div>`;
+          }
+        }
+
         return `<div class="card">
           ${corners()}
           <div class="lb-title">Today's Chronicle</div>
           ${lbHtml}
+          ${lifetimeHtml}
+          ${breakdownHtml}
           ${s.err?`<p class="err" style="margin-top:10px">${escHtml(s.err)}</p>`:""}
         </div>
         <p class="footer">
