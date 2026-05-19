@@ -774,53 +774,69 @@ input[type=text]:focus {
   z-index: 2;
 }
 
-/* ─── Lifetime standings (mini) ─── */
-.lifetime-box {
-  margin-top: 18px; padding-top: 16px;
-  border-top: 1px solid rgba(138,109,43,0.35);
+/* ─── Two-column scoreboard (Today | Overall) ─── */
+.scoreboards {
+  display: flex; gap: 14px; margin-bottom: 4px;
 }
-.lifetime-title {
-  font-family: 'Cinzel', serif;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--gold);
-  letter-spacing: 0.30em;
-  text-align: center;
-  margin-bottom: 12px;
-  text-transform: uppercase;
+.sb-col { flex: 1; min-width: 0; }
+.sb-col-title {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 600;
+  color: var(--gold); letter-spacing: 0.26em; text-transform: uppercase;
+  text-align: center; margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(138,109,43,0.35);
 }
-.lifetime-row {
+.sb-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 10px;
-  margin-bottom: 4px;
+  padding: 8px 10px;
+  margin-bottom: 5px;
   border: 1px solid transparent;
   font-family: 'IM Fell English', serif;
-  font-size: 15px;
+  font-size: 14px;
+  border-radius: 1px;
 }
-.lifetime-row.me {
-  background: rgba(201,161,74,0.08);
-  border-color: rgba(201,161,74,0.3);
+.sb-row.me {
+  background: linear-gradient(90deg, rgba(201,161,74,0.05), rgba(201,161,74,0.13), rgba(201,161,74,0.05));
+  border-color: rgba(201,161,74,0.4);
 }
-.lifetime-left { display: flex; align-items: center; gap: 12px; }
-.lifetime-rank {
-  font-family: 'Cinzel', serif; font-size: 12px;
-  color: var(--gold); min-width: 22px;
+.sb-name {
+  display: flex; align-items: center; gap: 6px;
+  min-width: 0; overflow: hidden;
 }
-.lifetime-rank.medal { color: var(--gold-bright); text-shadow: 0 0 6px rgba(240,212,137,0.4); }
-.lifetime-meta {
-  font-family: 'Cinzel', serif; font-size: 9px;
-  color: var(--parchment-faint); letter-spacing: 0.10em;
-  margin-left: 6px;
+.sb-medal {
+  font-family: 'Cinzel', serif; font-size: 13px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 6px rgba(240,212,137,0.4);
+  flex-shrink: 0;
 }
-.lifetime-score {
+.sb-medal.dim { color: var(--gold-deep); text-shadow: none; }
+.sb-you-tag {
+  font-family: 'IM Fell English', serif; font-size: 11px;
+  color: var(--gold-deep); font-style: italic;
+}
+.sb-score {
   font-family: 'Cinzel', serif; font-weight: 600;
-  font-size: 14px; color: var(--parchment);
-  letter-spacing: 0.05em;
+  font-size: 14px; color: var(--parchment-2);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.sb-score.perfect { color: var(--gold-bright); text-shadow: 0 0 10px rgba(240,212,137,0.4); }
+.sb-meta {
+  display: block;
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.10em; color: var(--parchment-faint);
+  text-align: right; margin-top: 1px;
+}
+@media (max-width: 480px) {
+  .scoreboards { gap: 10px; }
+  .sb-row { padding: 7px 8px; font-size: 13px; }
+  .sb-col-title { font-size: 9px; letter-spacing: 0.18em; }
+  .sb-score { font-size: 13px; }
 }
 
 /* ─── Minimal per-question breakdown on final done screen ─── */
 .bd-mini {
-  margin-top: 18px; padding-top: 16px;
+  margin-top: 24px; padding-top: 18px;
   border-top: 1px solid rgba(138,109,43,0.35);
 }
 .bd-mini-title {
@@ -829,8 +845,8 @@ input[type=text]:focus {
   text-align: center; margin-bottom: 14px; text-transform: uppercase;
 }
 .bd-row {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 8px 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 10px 0;
   border-bottom: 1px dashed rgba(138,109,43,0.18);
   font-family: 'IM Fell English', serif;
 }
@@ -838,39 +854,37 @@ input[type=text]:focus {
 .bd-num {
   font-family: 'Cinzel', serif; font-size: 11px;
   color: var(--gold); min-width: 18px;
-  padding-top: 1px;
+  padding-top: 2px;
 }
 .bd-q {
   flex: 1;
   font-size: 13px;
-  color: var(--parchment); line-height: 1.35;
+  color: var(--parchment); line-height: 1.4;
 }
-.bd-q-correct {
+.bd-q-snark {
   display: block;
-  font-size: 11px; color: var(--parchment-faint);
+  font-size: 12px; color: var(--parchment-dim);
   font-style: italic;
-  margin-top: 2px;
+  margin-top: 4px;
+  line-height: 1.45;
 }
+.bd-q-snark .nm { color: var(--gold); font-style: normal; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.10em; text-transform: uppercase; }
+.bd-q-snark .pk { color: var(--crimson-glow); }
+.bd-q-snark .ans { color: var(--forest-glow); font-style: normal; }
 .bd-marks {
-  display: flex; gap: 6px; flex-shrink: 0;
+  display: flex; gap: 5px; flex-shrink: 0;
   padding-top: 2px;
 }
 .bd-mark {
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
   font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700;
   border: 1px solid #3a2e1a;
   background: #0c0805;
-  position: relative;
 }
 .bd-mark.ok    { color: var(--forest-glow);  border-color: var(--forest);  background: rgba(74,138,72,0.10); }
 .bd-mark.bad   { color: var(--crimson-glow); border-color: var(--crimson); background: rgba(168,56,40,0.10); }
 .bd-mark.timeout { color: var(--parchment-faint); }
-.bd-mark-tt {
-  position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
-  font-family: 'IM Fell English', serif; font-size: 9px;
-  color: var(--parchment-faint); white-space: nowrap;
-}
 
 /* ─── Other player's answer pop-up during feedback ─── */
 .other-answer {
@@ -1458,6 +1472,50 @@ function _seedFromDk(dk) {
   let s = 0;
   for (let i = 0; i < dk.length; i++) s = (s * 31 + dk.charCodeAt(i)) >>> 0;
   return s;
+}
+
+// ── Snarky one-line phrasings for breakdown sentences ──
+// Used when calling out a wrong / timeout / both-wrong answer per question.
+// Easy to edit — auto-rotates daily based on date seed + question index.
+const PHRASE_ONE_WRONG = [
+  "{name} went with {pick}. Bold.",
+  "{name} confidently said {pick}.",
+  "{name} swore it was {pick}.",
+  "{name} chose {pick}. Brave.",
+  "{name} typed {pick} like it was right.",
+  "{name} picked {pick}. Genuinely.",
+  "{name} put chips on {pick}.",
+  "{name} said {pick}. We're worried.",
+];
+const PHRASE_ONE_TIMEOUT = [
+  "{name} watched the clock for sport.",
+  "{name} froze.",
+  "{name} ran out of clock.",
+  "{name} stared into the void.",
+  "{name} ghosted this one.",
+];
+const PHRASE_BOTH_WRONG = [
+  "Carnage. {a} said {pa}, {b} said {pb}.",
+  "Both flopped — {a}: {pa}, {b}: {pb}.",
+  "Disaster duet — {a} → {pa}, {b} → {pb}.",
+  "Mutual fumble. {a}: {pa}. {b}: {pb}.",
+  "Group cry. {a} picked {pa}, {b} picked {pb}.",
+];
+const PHRASE_BOTH_TIMEOUT = [
+  "Both ghosts in the chat.",
+  "Mutual stare-down with the clock.",
+  "Neither dared a guess.",
+  "Joint surrender.",
+];
+const PHRASE_ONE_TIMEOUT_OTHER_WRONG = [
+  "{tname} ghosted, {wname} guessed {pick}.",
+  "{tname} froze. {wname} said {pick}. Both losses.",
+  "{tname} let the clock eat it. {wname} bet on {pick}.",
+];
+
+function pickPhrase(arr, seed) { return arr[seed % arr.length]; }
+function fillPhrase(tpl, vars) {
+  return tpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 }
 function getScoreMsg(score, dk) {
   const tier =
@@ -2142,26 +2200,48 @@ function render() {
           </span>`;
         }).join("")}</div>` : "";
 
-    let lbHtml;
-    if (s.syncing || s.leaderboard===null) {
-      lbHtml = `<p class="center-note">Inscribing your name in the chronicle…</p>`;
-    } else if (!s.leaderboard.length) {
-      lbHtml = `<p class="center-note">No names yet recorded today.</p>`;
-    } else {
-      lbHtml = s.leaderboard.map(({name,score},i)=>{
-        const rank = i < 3
-          ? `<span class="lb-rank medal">${MEDALS[i]}</span>`
-          : `<span class="lb-rank">${i+1}</span>`;
-        return `
-        <div class="lb-row ${name===s.playerName?'me':''}">
-          <div class="lb-left">
-            ${rank}
-            <span class="lb-name">${escHtml(name)}</span>
-            ${name===s.playerName?`<span class="lb-you">— you</span>`:""}
-          </div>
-          <span class="lb-score ${score>=MAX_SCORE?'perfect':''}">${score} <span style="opacity:0.4">/</span> ${MAX_SCORE}</span>
+    // ── 2-column scoreboard: Today | Overall ──
+    function renderScoreboards() {
+      if (s.syncing || s.leaderboard === null) {
+        return `<p class="center-note">Inscribing your name in the chronicle…</p>`;
+      }
+      const todayList = s.leaderboard || [];
+      const lifetimeList = (s.lifetime || []).filter(p => p.quests > 0);
+
+      function sbRow(name, scoreLabel, isMe, isTop, perfect, metaLabel) {
+        const medal = isTop ? '✦' : '✧';
+        const medalCls = isTop ? '' : 'dim';
+        return `<div class="sb-row ${isMe?'me':''}">
+          <span class="sb-name">
+            <span class="sb-medal ${medalCls}">${medal}</span>
+            <span>${escHtml(name)}</span>
+            ${isMe ? `<span class="sb-you-tag">— you</span>` : ''}
+          </span>
+          <span>
+            <span class="sb-score ${perfect?'perfect':''}">${scoreLabel}</span>
+            ${metaLabel ? `<span class="sb-meta">${metaLabel}</span>` : ''}
+          </span>
         </div>`;
-      }).join("");
+      }
+
+      const todayRows = todayList.length
+        ? todayList.map((p, i) => sbRow(p.name, `${p.score} / ${MAX_SCORE}`, p.name === s.playerName, i === 0, p.score >= MAX_SCORE, null)).join('')
+        : `<p class="center-note" style="font-size:13px">No scores yet.</p>`;
+
+      const lifetimeRows = lifetimeList.length
+        ? lifetimeList.map((p, i) => sbRow(p.name, `${p.score} pts`, p.name === s.playerName, i === 0, false, `${p.quests} quest${p.quests===1?'':'s'} · ${p.wins} win${p.wins===1?'':'s'}`)).join('')
+        : `<p class="center-note" style="font-size:13px">Just getting started.</p>`;
+
+      return `<div class="scoreboards">
+        <div class="sb-col">
+          <div class="sb-col-title">Today</div>
+          ${todayRows}
+        </div>
+        <div class="sb-col">
+          <div class="sb-col-title">Overall</div>
+          ${lifetimeRows}
+        </div>
+      </div>`;
     }
 
     app.innerHTML = `
@@ -2199,28 +2279,7 @@ function render() {
           <p class="hint">Catching up on missed days</p>
         </div>`;
 
-        // ── Lifetime standings (mini, inside the chronicle card) ──
-        let lifetimeHtml = '';
-        if (s.lifetime && s.lifetime.length) {
-          const rows = s.lifetime.filter(p => p.quests > 0).map((p, i) => {
-            const medal = i === 0 ? '✦' : i === 1 ? '✧' : '·';
-            const isMe = p.name === s.playerName;
-            return `<div class="lifetime-row ${isMe?'me':''}">
-              <div class="lifetime-left">
-                <span class="lifetime-rank ${i===0?'medal':''}">${medal}</span>
-                <span>${escHtml(p.name)}${isMe?' — you':''}</span>
-                <span class="lifetime-meta">${p.quests} quest${p.quests===1?'':'s'} · ${p.wins} win${p.wins===1?'':'s'}</span>
-              </div>
-              <span class="lifetime-score">${p.score} pts</span>
-            </div>`;
-          }).join('');
-          if (rows) lifetimeHtml = `<div class="lifetime-box">
-            <div class="lifetime-title">Lifetime Standings</div>
-            ${rows}
-          </div>`;
-        }
-
-        // ── Minimal per-question breakdown (only when BOTH have played today's quiz) ──
+        // ── Minimal per-question breakdown with snarky sentences ──
         let breakdownHtml = '';
         const bothPlayed = s.leaderboard && s.leaderboard.length === 2;
         if (bothPlayed) {
@@ -2230,27 +2289,73 @@ function render() {
           const other = s.leaderboard.find(e => e.name !== s.playerName);
           const myD = me?.details || null;
           const otherD = other?.details || null;
-          if (qs.length) {
+          const daySeed = _seedFromDk(reviewDk);
+          if (qs.length && me && other) {
             const rows = qs.map((q, i) => {
-              function mark(label, d) {
-                if (!d || !d[i]) return `<div class="bd-mark timeout" title="no breakdown">?<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
-                const di = d[i];
-                if (di.sel === -1) return `<div class="bd-mark timeout" title="timed out">⌛<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
-                const cls = di.ok ? 'ok' : 'bad';
-                const icon = di.ok ? '✓' : '✗';
-                return `<div class="bd-mark ${cls}" title="${di.ok ? '+' + di.pts + ' pts · ' + di.t + 's' : 'picked: ' + escHtml(q.opts[di.sel] || '?')}">${icon}<span class="bd-mark-tt">${escHtml(label)}</span></div>`;
+              const mD = myD?.[i], oD = otherD?.[i];
+              function markOf(d) {
+                if (!d) return `<div class="bd-mark timeout" title="no data">?</div>`;
+                if (d.sel === -1) return `<div class="bd-mark timeout" title="timed out">⌛</div>`;
+                return d.ok
+                  ? `<div class="bd-mark ok" title="+${d.pts} · ${d.t}s">✓</div>`
+                  : `<div class="bd-mark bad" title="picked: ${escHtml(q.opts[d.sel] || '?')}">✗</div>`;
               }
-              const meInitial = (me?.name || s.playerName).charAt(0).toUpperCase();
-              const otherInitial = (other?.name || '?').charAt(0).toUpperCase();
+              // Snark sentence describing the wrong/timeout picks
+              let snark = '';
+              const mOk = mD?.ok, oOk = oD?.ok;
+              const mTo = mD?.sel === -1, oTo = oD?.sel === -1;
+              const mPick = mD && mD.sel >= 0 ? q.opts[mD.sel] : null;
+              const oPick = oD && oD.sel >= 0 ? q.opts[oD.sel] : null;
+              const correctAns = q.opts[q.a];
+              const seed = daySeed + i * 17;
+
+              if (mOk && oOk) {
+                // Both correct — no sentence, marks tell the story
+                snark = '';
+              } else if (mTo && oTo) {
+                snark = pickPhrase(PHRASE_BOTH_TIMEOUT, seed) + ` <span class="ans">${escHtml(correctAns)}</span>`;
+              } else if (!mOk && !oOk && !mTo && !oTo) {
+                snark = fillPhrase(pickPhrase(PHRASE_BOTH_WRONG, seed), {
+                  a: `<span class="nm">${escHtml(me.name)}</span>`, pa: `<span class="pk">${escHtml(mPick)}</span>`,
+                  b: `<span class="nm">${escHtml(other.name)}</span>`, pb: `<span class="pk">${escHtml(oPick)}</span>`
+                }) + ` <span class="ans">→ ${escHtml(correctAns)}</span>`;
+              } else if (mTo && !oOk) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_TIMEOUT_OTHER_WRONG, seed), {
+                  tname: `<span class="nm">${escHtml(me.name)}</span>`,
+                  wname: `<span class="nm">${escHtml(other.name)}</span>`,
+                  pick: `<span class="pk">${escHtml(oPick)}</span>`
+                }) + ` <span class="ans">→ ${escHtml(correctAns)}</span>`;
+              } else if (oTo && !mOk) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_TIMEOUT_OTHER_WRONG, seed), {
+                  tname: `<span class="nm">${escHtml(other.name)}</span>`,
+                  wname: `<span class="nm">${escHtml(me.name)}</span>`,
+                  pick: `<span class="pk">${escHtml(mPick)}</span>`
+                }) + ` <span class="ans">→ ${escHtml(correctAns)}</span>`;
+              } else if (mTo) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_TIMEOUT, seed), { name: `<span class="nm">${escHtml(me.name)}</span>` });
+              } else if (oTo) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_TIMEOUT, seed), { name: `<span class="nm">${escHtml(other.name)}</span>` });
+              } else if (!mOk) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_WRONG, seed), {
+                  name: `<span class="nm">${escHtml(me.name)}</span>`,
+                  pick: `<span class="pk">${escHtml(mPick)}</span>`
+                });
+              } else if (!oOk) {
+                snark = fillPhrase(pickPhrase(PHRASE_ONE_WRONG, seed), {
+                  name: `<span class="nm">${escHtml(other.name)}</span>`,
+                  pick: `<span class="pk">${escHtml(oPick)}</span>`
+                });
+              }
+
               return `<div class="bd-row">
                 <span class="bd-num">${i+1}.</span>
                 <div class="bd-q">
                   ${escHtml(q.q)}
-                  <span class="bd-q-correct">→ ${escHtml(q.opts[q.a])}</span>
+                  ${snark ? `<span class="bd-q-snark">${snark}</span>` : ''}
                 </div>
                 <div class="bd-marks">
-                  ${mark(meInitial, myD)}
-                  ${mark(otherInitial, otherD)}
+                  ${markOf(mD)}
+                  ${markOf(oD)}
                 </div>
               </div>`;
             }).join('');
@@ -2263,9 +2368,7 @@ function render() {
 
         return `<div class="card">
           ${corners()}
-          <div class="lb-title">Today's Chronicle</div>
-          ${lbHtml}
-          ${lifetimeHtml}
+          ${renderScoreboards()}
           ${breakdownHtml}
           ${s.err?`<p class="err" style="margin-top:10px">${escHtml(s.err)}</p>`:""}
         </div>
