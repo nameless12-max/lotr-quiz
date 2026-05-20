@@ -1988,9 +1988,13 @@ function kickCountdown(nextIdx) {
 async function finishQuiz(answers, qScores) {
   const score = qScores.reduce((a, b) => a + b, 0);
   const quizDk = state.quizDateKey || getDateKey();
-  // Build per-question detail array
+  // Build per-question detail array — store full question state so the breakdown
+  // is robust against future algorithm changes (q text + options + correct answer)
   const details = state.questions.map((q, i) => ({
-    sel: state.questionSelections?.[i] ?? -1,   // which option index picked (-1 = timeout)
+    q: q.q,                                 // question text as played
+    opts: q.opts,                           // options as shown (already shuffled)
+    ans: q.opts[q.a],                       // correct answer text
+    sel: state.questionSelections?.[i] ?? -1, // which option index picked (-1 = timeout)
     ok: answers[i],
     t: +(state.questionTimes?.[i] ?? 10).toFixed(1),
     pts: qScores[i],
@@ -2376,13 +2380,19 @@ function render() {
         const bothPlayed = s.leaderboard && s.leaderboard.length === 2;
         if (bothPlayed) {
           const reviewDk = s.quizDateKey || getDateKey();
-          const qs = getDailyQuestions(reviewDk);
           const me    = s.leaderboard.find(e => e.name === s.playerName);
           const other = s.leaderboard.find(e => e.name !== s.playerName);
           const myD = me?.details || null;
           const otherD = other?.details || null;
           const daySeed = _seedFromDk(reviewDk);
-          if (qs.length && me && other) {
+          // Prefer reconstructing questions from STORED details (robust against
+          // algorithm changes). Fall back to regenerating only if details lack
+          // the stored question text (legacy data from before this fix).
+          const sourceD = (myD && myD[0]?.q) ? myD : ((otherD && otherD[0]?.q) ? otherD : null);
+          const qs = sourceD
+            ? sourceD.map(d => ({ q: d.q, opts: d.opts, a: d.opts.indexOf(d.ans), cat: d.cat }))
+            : null;  // legacy data — don't display question text, would be wrong
+          if (qs && qs.length && me && other) {
             const rows = qs.map((q, i) => {
               const mD = myD?.[i], oD = otherD?.[i];
               function markOf(d) {
@@ -2454,6 +2464,13 @@ function render() {
             breakdownHtml = `<div class="bd-mini">
               <div class="bd-mini-title">Answer-by-Answer</div>
               ${rows}
+            </div>`;
+          } else if (me && other && (myD || otherD)) {
+            // Legacy data — players have a score but no per-question details OR
+            // stored details lack question text. Show a small note instead of bad rows.
+            breakdownHtml = `<div class="bd-mini">
+              <div class="bd-mini-title">Answer-by-Answer</div>
+              <p class="center-note" style="font-size:13px; padding: 8px 0;">Answer breakdown isn't available for this quest — both played before the upgrade.</p>
             </div>`;
           }
         }
